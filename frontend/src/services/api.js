@@ -18,7 +18,8 @@ export const api = {
       localStorage.setItem("user", JSON.stringify({
         username: res.data.username,
         email: res.data.email,
-        fullName: res.data.fullName
+        fullName: res.data.fullName,
+        role: res.data.role
       }));
     }
     return res.data;
@@ -69,7 +70,7 @@ export const api = {
     }
   },
 
-  // Spring Boot Data
+  // Spring Boot Data (User)
   getScanHistory: async () => {
     const res = await axios.get(`${SPRINGBOOT_URL}/scans/history`, {
       headers: getAuthHeader()
@@ -77,8 +78,49 @@ export const api = {
     return res.data;
   },
 
+  getRecentScans: async (limit = 4) => {
+    try {
+      const res = await axios.get(`${SPRINGBOOT_URL}/scans/history`, {
+        headers: getAuthHeader()
+      });
+      return res.data?.slice(0, limit) || [];
+    } catch (err) {
+      console.error("Failed to fetch recent scans:", err);
+      return [];
+    }
+  },
+
   getDailyAnalytics: async () => {
     const res = await axios.get(`${SPRINGBOOT_URL}/analytics/daily`, {
+      headers: getAuthHeader()
+    });
+    return res.data;
+  },
+
+  // Admin APIs
+  getAdminUsers: async () => {
+    const res = await axios.get(`${SPRINGBOOT_URL}/admin/users`, {
+      headers: getAuthHeader()
+    });
+    return res.data;
+  },
+
+  toggleUserStatus: async (userId) => {
+    const res = await axios.put(`${SPRINGBOOT_URL}/admin/users/${userId}/toggle-status`, {}, {
+      headers: getAuthHeader()
+    });
+    return res.data;
+  },
+
+  getAdminScans: async () => {
+    const res = await axios.get(`${SPRINGBOOT_URL}/admin/scans`, {
+      headers: getAuthHeader()
+    });
+    return res.data;
+  },
+
+  getAdminStats: async () => {
+    const res = await axios.get(`${SPRINGBOOT_URL}/admin/stats`, {
       headers: getAuthHeader()
     });
     return res.data;

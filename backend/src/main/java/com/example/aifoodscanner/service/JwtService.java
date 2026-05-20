@@ -1,5 +1,6 @@
 package com.example.aifoodscanner.service;
 
+import com.example.aifoodscanner.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -30,7 +31,15 @@ public class JwtService {
     }
 
     public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
+        Map<String, Object> extraClaims = new HashMap<>();
+        if (userDetails instanceof User) {
+            extraClaims.put("role", ((User) userDetails).getRole().name());
+        }
+        return generateToken(extraClaims, userDetails);
+    }
+
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class));
     }
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {

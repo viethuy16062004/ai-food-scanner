@@ -1,6 +1,7 @@
 package com.example.aifoodscanner.service;
 
 import com.example.aifoodscanner.dto.RegisterRequest;
+import com.example.aifoodscanner.entity.Role;
 import com.example.aifoodscanner.entity.User;
 import com.example.aifoodscanner.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class UserService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .email(request.getEmail())
                 .fullName(request.getFullName())
+                .role(Role.ROLE_USER)
                 .build();
 
         return userRepository.save(user);
