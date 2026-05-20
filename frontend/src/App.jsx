@@ -6,6 +6,7 @@ import Dashboard from "./components/dashboard/Dashboard";
 import HistoryList from "./components/history/HistoryList";
 import Header from "./layouts/Header";
 import Footer from "./layouts/Footer";
+import { Activity } from "lucide-react";
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
