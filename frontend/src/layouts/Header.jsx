@@ -1,7 +1,18 @@
 import React from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { LogOut, User, Activity, Sparkles } from "lucide-react";
 
 export default function Header({ user, onLogout, onNavigate, currentPage }) {
+  const navigate = useNavigate();
+
+  const handleNav = (page) => {
+    if (onNavigate) {
+      onNavigate(page);
+    } else {
+      navigate(`/${page === "home" ? "home" : page}`);
+    }
+  };
+
   return (
     <header className="bg-white sticky top-0 z-40 border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -21,25 +32,25 @@ export default function Header({ user, onLogout, onNavigate, currentPage }) {
 
         <nav className="hidden md:flex items-center gap-8">
           <button
-            onClick={() => onNavigate && onNavigate("home")}
+            onClick={() => handleNav("home")}
             className={`font-medium text-sm ${currentPage === "home" ? "text-teal-600 border-b-2 border-teal-600" : "text-gray-600 hover:text-teal-600"}`}
           >
             Home
           </button>
           <button
-            onClick={() => onNavigate && onNavigate("scan")}
+            onClick={() => handleNav("scan")}
             className={`font-medium text-sm ${currentPage === "scan" ? "text-teal-600 border-b-2 border-teal-600" : "text-gray-600 hover:text-teal-600"}`}
           >
             Scan
           </button>
           <button
-            onClick={() => onNavigate && onNavigate("history")}
+            onClick={() => handleNav("history")}
             className={`font-medium text-sm ${currentPage === "history" ? "text-teal-600 border-b-2 border-teal-600" : "text-gray-600 hover:text-teal-600"}`}
           >
             History
           </button>
           <button
-            onClick={() => onNavigate && onNavigate("profile")}
+            onClick={() => handleNav("profile")}
             className={`font-medium text-sm ${currentPage === "profile" ? "text-teal-600 border-b-2 border-teal-600" : "text-gray-600 hover:text-teal-600"}`}
           >
             Profile
