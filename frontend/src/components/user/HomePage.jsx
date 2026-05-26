@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../../services/api";
 import { Droplet, ChevronRight, Camera } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-export default function HomePage({ user, onStartScan }) {
+export default function HomePage({ user, onStartScan, onSelectScan }) {
   const [analytics, setAnalytics] = useState(null);
   const [recentScans, setRecentScans] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -30,276 +32,390 @@ export default function HomePage({ user, onStartScan }) {
     return "buổi tối";
   };
 
-  const userName = user?.fullName || user?.name || user?.username || "Bạn";
+  const getTodayDateString = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+
+  // Water Intake Tracking (Persisted in localStorage, defaults to 1500ml as in mockup)
+  const [waterIntake, setWaterIntake] = useState(() => {
+    const username = user?.username || "default";
+    const dateKey = getTodayDateString();
+    const stored = localStorage.getItem(`water_intake_${username}_${dateKey}`);
+    return stored ? parseInt(stored, 10) : 1500;
+  });
+
+  const handleAddWater = () => {
+    const nextIntake = waterIntake >= 3000 ? 0 : waterIntake + 250; // loop back to 0 if they hit max to allow testing
+    setWaterIntake(nextIntake);
+    const username = user?.username || "default";
+    const dateKey = getTodayDateString();
+    localStorage.setItem(`water_intake_${username}_${dateKey}`, nextIntake.toString());
+  };
+
+  const userName = user?.fullName
+    ? user.fullName.split(" ").slice(-1)[0]
+    : (user?.username || "Minh");
+
+  // Onboarding / Fallback data mapping to look exactly like mockup if user has no scans
+  const displayAnalytics = {
+    todayCalories: analytics?.todayCalories || 0,
+    targetCalories: analytics?.targetCalories || 2000,
+    todayCarbs: analytics?.todayCarbs || 0,
+    targetCarbs: analytics?.targetCarbs || 250,
+    todayProtein: analytics?.todayProtein || 0,
+    targetProtein: analytics?.targetProtein || 75,
+    todayFat: analytics?.todayFat || 0,
+    targetFat: analytics?.targetFat || 70,
+    todayFiber: analytics?.todayFiber || 0,
+    targetFiber: 30,
+  };
+
+  const combinedScans = recentScans || [];
+
+  const getFoodImage = (scan) => {
+    if (scan.imageUrl) return scan.imageUrl;
+    const name = (scan.foodName || "").toLowerCase();
+    if (name.includes("salad")) return "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&q=80&w=600";
+    if (name.includes("chicken") || name.includes("gà")) return "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&q=80&w=600";
+    if (name.includes("pizza")) return "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=600";
+    if (name.includes("smoothie") || name.includes("sinh tố")) return "https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&q=80&w=600";
+    return "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&q=80&w=600";
+  };
+
+  const getScanTag = (scan) => {
+    if (scan.category) return scan.category;
+    const score = scan.healthyScore || 80;
+    if (score >= 90) return "Lành mạnh";
+    if (score >= 80) return "Giàu đạm";
+    if (score >= 60) return "Cân bằng";
+    return "Cân nhắc";
+  };
+
+  const getTagStyle = (tag) => {
+    switch (tag) {
+      case "Lành mạnh":
+        return "bg-emerald-50 text-emerald-700 border-emerald-100";
+      case "Giàu đạm":
+        return "bg-teal-50 text-teal-700 border-teal-100";
+      case "Cân bằng":
+        return "bg-[#f4fbf7] text-[#0f766e] border-[#d1fae5]";
+      case "Siêu thực phẩm":
+        return "bg-teal-50 text-teal-700 border-teal-100";
+      default:
+        return "bg-slate-50 text-slate-700 border-slate-100";
+    }
+  };
+
+  const getScoreColor = (score) => {
+    if (score >= 80) return "text-emerald-700";
+    if (score >= 60) return "text-amber-700";
+    return "text-red-700";
+  };
+
+  // Circular progress math
+  const radius = 64;
+  const strokeWidth = 12;
+  const circumference = 2 * Math.PI * radius;
+  const caloriesRatio = displayAnalytics.todayCalories / displayAnalytics.targetCalories;
+  const strokeDashoffset = circumference - Math.min(caloriesRatio, 1) * circumference;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px] w-full">
+        <div className="relative w-16 h-16">
+          <div className="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
+          <div className="absolute inset-0 border-4 border-[#059669] border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full bg-white">
-      {/* GREETING SECTION */}
-      <div className="mb-12 px-6">
-        <h1 className="text-5xl font-bold text-teal-600 mb-3">
-          Chào {getGreeting()}, {userName}!
-        </h1>
-        <p className="text-gray-600 text-base">
-          Hôm nay bạn đang duy trì tốt quán lệ ăn uống. Cùng kiểm tra chỉ số nhé.
-        </p>
-      </div>
-
-      {/* STATS CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16 px-6">
-        {/* NĂNG LƯỢNG CARD */}
-        <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-800 mb-8">
-            Năng lượng
-          </h3>
-          <div className="flex flex-col items-center">
-            {/* Circular Progress */}
-            <div className="relative w-40 h-40 flex items-center justify-center mb-6">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 160 160">
-                {/* Background circle */}
-                <circle
-                  cx="80"
-                  cy="80"
-                  r="70"
-                  stroke="#e5e7eb"
-                  strokeWidth="12"
-                  fill="none"
-                />
-                {/* Progress circle */}
-                <circle
-                  cx="80"
-                  cy="80"
-                  r="70"
-                  stroke="#16a34a"
-                  strokeWidth="12"
-                  fill="none"
-                  strokeDasharray={`${
-                    analytics
-                      ? (analytics.todayCalories / analytics.targetCalories) * 100 * 4.4
-                      : 0
-                  } 439`}
-                  strokeLinecap="round"
-                />
-              </svg>
-              <div className="absolute flex flex-col items-center">
-                <span className="text-4xl font-bold text-teal-700">
-                  {analytics ? Math.round(analytics.todayCalories) : 0}
-                </span>
-                <span className="text-xs text-gray-600 font-semibold">KCAL - ĐÃ NẠP</span>
-              </div>
-            </div>
-            <p className="text-center text-gray-700 font-medium mb-2">
-              Mục tiêu: {analytics ? Math.round(analytics.targetCalories) : 0} kcal
-            </p>
-            <p className="text-center text-teal-600 font-bold text-lg">
-              {analytics ? Math.round((analytics.todayCalories / analytics.targetCalories) * 100) : 0}%
-            </p>
-          </div>
+    <div className="w-full py-8">
+      <div className="max-w-7xl mx-auto px-6">
+        {/* GREETING SECTION */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-extrabold text-[#047857] mb-2 tracking-tight">
+            Chào {getGreeting()}, {userName}!
+          </h1>
+          <p className="text-slate-500 text-sm font-medium">
+            Hôm nay bạn đang duy trì thói quen rất tốt. Cùng kiểm tra chỉ số nhé.
+          </p>
         </div>
 
-        {/* DINH DƯỠNG CARD */}
-        <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-800 mb-8">
-            Dinh dưỡng da lượng
-          </h3>
-          <div className="space-y-6">
-            {/* Carbs */}
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-semibold text-gray-800">Carbs</span>
-                <span className="text-sm text-gray-600">
-                  {analytics ? Math.round(analytics.todayCarbs) : 0}g / {analytics ? Math.round(analytics.targetCarbs) : 0}g
-                </span>
-              </div>
-              <div className="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-teal-500 rounded-full"
-                  style={{
-                    width: `${
-                      analytics
-                        ? Math.min((analytics.todayCarbs / analytics.targetCarbs) * 100, 100)
-                        : 0
-                    }%`,
-                  }}
-                ></div>
-              </div>
-            </div>
-
-            {/* Protein */}
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-semibold text-gray-800">Protein</span>
-                <span className="text-sm text-gray-600">
-                  {analytics ? Math.round(analytics.todayProtein) : 0}g / {analytics ? Math.round(analytics.targetProtein) : 0}g
-                </span>
-              </div>
-              <div className="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-teal-700 rounded-full"
-                  style={{
-                    width: `${
-                      analytics
-                        ? Math.min((analytics.todayProtein / analytics.targetProtein) * 100, 100)
-                        : 0
-                    }%`,
-                  }}
-                ></div>
+        {/* STATS CARDS */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+          
+          {/* NĂNG LƯỢNG CARD */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100/50 flex flex-col justify-between min-h-[350px]">
+            <h3 className="text-base font-bold text-slate-800">
+              Năng lượng
+            </h3>
+            
+            <div className="flex-1 flex flex-col items-center justify-center py-4">
+              <div className="relative w-40 h-40 flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 160 160">
+                  {/* Base Circle */}
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r={radius}
+                    stroke="#f1f5f9"
+                    strokeWidth={strokeWidth}
+                    fill="none"
+                  />
+                  {/* Progress Circle */}
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r={radius}
+                    stroke="#047857"
+                    strokeWidth={strokeWidth}
+                    fill="none"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={strokeDashoffset}
+                    strokeLinecap="round"
+                    className="transition-all duration-1000 ease-out"
+                  />
+                </svg>
+                {/* Center Content */}
+                <div className="absolute flex flex-col items-center">
+                  <span className="text-3xl font-extrabold text-[#0f2923] leading-none">
+                    {Math.round(displayAnalytics.todayCalories)}
+                  </span>
+                  <span className="text-[9px] font-bold text-slate-400 tracking-wider mt-1.5 uppercase">
+                    Kcal đã nạp
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Chất béo */}
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-semibold text-gray-800">Chất béo</span>
-                <span className="text-sm text-gray-600">
-                  {analytics ? Math.round(analytics.todayFat) : 0}g / {analytics ? Math.round(analytics.targetFat) : 0}g
-                </span>
-              </div>
-              <div className="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gray-400 rounded-full"
-                  style={{
-                    width: `${
-                      analytics
-                        ? Math.min((analytics.todayFat / analytics.targetFat) * 100, 100)
-                        : 0
-                    }%`,
-                  }}
-                ></div>
-              </div>
+            <div className="flex justify-between items-center w-full border-t border-slate-50 pt-4">
+              <span className="text-xs font-semibold text-slate-400">
+                Mục tiêu: {Math.round(displayAnalytics.targetCalories)} kcal
+              </span>
+              <span className="text-xs font-bold text-emerald-600">
+                {Math.round((displayAnalytics.todayCalories / displayAnalytics.targetCalories) * 100)}%
+              </span>
             </div>
+          </div>
 
-            {/* Chất xơ */}
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-semibold text-gray-800">Chất xơ</span>
-                <span className="text-sm text-gray-600">
-                  {analytics ? Math.round(analytics.todayFat * 0.5) : 0}g / {analytics ? Math.round(analytics.targetFat * 0.5) : 0}g
-                </span>
+          {/* DINH DƯỠNG ĐA LƯỢNG CARD */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100/50 flex flex-col justify-between min-h-[350px]">
+            <h3 className="text-base font-bold text-slate-800 mb-4">
+              Dinh dưỡng đa lượng
+            </h3>
+            
+            <div className="space-y-4 flex-1 flex flex-col justify-center">
+              {/* Carbs */}
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs font-bold text-slate-700">Carbs</span>
+                  <span className="text-[11px] text-slate-400 font-semibold">
+                    {Math.round(displayAnalytics.todayCarbs)}g / {Math.round(displayAnalytics.targetCarbs)}g
+                  </span>
+                </div>
+                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min((displayAnalytics.todayCarbs / displayAnalytics.targetCarbs) * 100, 100)}%` }}
+                  />
+                </div>
               </div>
-              <div className="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-teal-500 rounded-full"
-                  style={{
-                    width: `${
-                      analytics
-                        ? Math.min((analytics.todayFat * 0.5 / (analytics.targetFat * 0.5)) * 100, 100)
-                        : 0
-                    }%`,
-                  }}
-                ></div>
+
+              {/* Protein */}
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs font-bold text-slate-700">Protein</span>
+                  <span className="text-[11px] text-slate-400 font-semibold">
+                    {Math.round(displayAnalytics.todayProtein)}g / {Math.round(displayAnalytics.targetProtein)}g
+                  </span>
+                </div>
+                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-[#047857] rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min((displayAnalytics.todayProtein / displayAnalytics.targetProtein) * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Chất béo */}
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs font-bold text-slate-700">Chất béo</span>
+                  <span className="text-[11px] text-slate-400 font-semibold">
+                    {Math.round(displayAnalytics.todayFat)}g / {Math.round(displayAnalytics.targetFat)}g
+                  </span>
+                </div>
+                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-[#8ba0b5] rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min((displayAnalytics.todayFat / displayAnalytics.targetFat) * 100, 100)}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Chất xơ */}
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs font-bold text-slate-700">Chất xơ</span>
+                  <span className="text-[11px] text-slate-400 font-semibold">
+                    {Math.round(displayAnalytics.todayFiber)}g / {Math.round(displayAnalytics.targetFiber)}g
+                  </span>
+                </div>
+                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-[#34d399] rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min((displayAnalytics.todayFiber / displayAnalytics.targetFiber) * 100, 100)}%` }}
+                  />
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* NƯỚC CARD */}
-        <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            Uống nước
-          </h3>
-          <p className="text-sm text-gray-600 mb-8">Mục tiêu: 2.5L</p>
-          <div className="flex justify-center gap-2 mb-8">
-            {[...Array(5)].map((_, i) => (
-              <div
-                key={i}
-                className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${
-                  i < 3
-                    ? "bg-teal-100 border-teal-300"
-                    : "bg-gray-100 border-gray-300"
-                }`}
-              >
-                <Droplet
-                  className={`w-6 h-6 ${
-                    i < 3 ? "text-teal-500 fill-teal-500" : "text-gray-400"
-                  }`}
-                />
-              </div>
-            ))}
-          </div>
-          <button className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-xl transition-colors text-base">
-            Thêm 250ml
-          </button>
-        </div>
-      </div>
+          {/* UỐNG NƯỚC CARD */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100/50 flex flex-col justify-between min-h-[350px]">
+            <div>
+              <h3 className="text-base font-bold text-slate-800">
+                Uống nước
+              </h3>
+              <span className="text-xs font-semibold text-slate-400 mt-1 block">Mục tiêu: 2.5L</span>
+            </div>
 
-      {/* QUÉT GẬN DÂY SECTION */}
-      <div className="px-6">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-bold text-gray-800">Quét gắn dây</h2>
-          <button className="text-sm text-teal-600 hover:text-teal-700 font-semibold flex items-center gap-1 transition-colors">
-            Xem tất cả <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
-
-        {recentScans.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {recentScans.map((scan, idx) => (
-              <div
-                key={idx}
-                className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-all cursor-pointer group"
-                onClick={() => onStartScan && onStartScan(scan)}
-              >
-                {/* Food Image */}
-                <div className="relative h-48 bg-gray-200 overflow-hidden rounded-t-2xl">
-                  {scan.imageUrl ? (
-                    <img
-                      src={scan.imageUrl}
-                      alt={scan.foodName}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-teal-100 to-gray-100">
-                      <span className="text-gray-400 text-sm">Không có ảnh</span>
+            {/* Water Drops Grid */}
+            <div className="flex flex-col items-center justify-center my-auto py-2">
+              {/* Row 1: 4 drops */}
+              <div className="flex justify-center gap-4 mb-3">
+                {[0, 1, 2, 3].map((i) => {
+                  const isFilled = waterIntake >= (i + 1) * 500;
+                  return (
+                    <div
+                      key={i}
+                      className={`w-11 h-11 rounded-full flex items-center justify-center border transition-all duration-300 ${
+                        isFilled
+                          ? "bg-emerald-50 border-emerald-100"
+                          : "bg-slate-50 border-slate-200/80"
+                      }`}
+                    >
+                      <Droplet
+                        className={`w-5 h-5 transition-colors duration-300 ${
+                          isFilled ? "text-[#059669] fill-[#059669]" : "text-slate-300"
+                        }`}
+                      />
                     </div>
-                  )}
-                  {/* Score Badge */}
-                  <div className="absolute top-3 right-3 bg-teal-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">
-                    {scan.healthyScore || 85} SCORE
-                  </div>
-                </div>
-
-                {/* Food Info */}
-                <div className="p-5">
-                  <h4 className="font-bold text-gray-800 text-base mb-2 truncate">
-                    {scan.foodName}
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-4">
-                    {scan.calories} kcal • {scan.protein}g Protein
-                  </p>
-                  <div className="flex gap-2">
-                    <span className="px-3 py-1 bg-teal-100 text-teal-700 rounded-full border border-teal-300 text-xs font-medium">
-                      {scan.category || "Thực phẩm"}
-                    </span>
-                  </div>
-                </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="bg-white p-12 rounded-2xl border border-gray-200 shadow-sm flex flex-col items-center justify-center text-center mb-8">
-            <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mb-4">
-              <ChevronRight className="w-8 h-8 text-teal-600" />
+              {/* Row 2: 1 drop */}
+              <div className="flex justify-center mb-2">
+                {[4].map((i) => {
+                  const isFilled = waterIntake >= (i + 1) * 500;
+                  return (
+                    <div
+                      key={i}
+                      className={`w-11 h-11 rounded-full flex items-center justify-center border transition-all duration-300 ${
+                        isFilled
+                          ? "bg-emerald-50 border-emerald-100"
+                          : "bg-slate-50 border-slate-200/80"
+                      }`}
+                    >
+                      <Droplet
+                        className={`w-5 h-5 transition-colors duration-300 ${
+                          isFilled ? "text-[#059669] fill-[#059669]" : "text-slate-300"
+                        }`}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-            <h3 className="text-xl font-bold text-gray-800 mb-2">Chưa có quét nào</h3>
-            <p className="text-gray-600 mb-6">
-              Hãy bắt đầu quét thực phẩm để theo dõi dinh dưỡng của bạn
-            </p>
+
             <button
-              onClick={onStartScan}
-              className="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-8 rounded-xl transition-colors"
+              onClick={handleAddWater}
+              className="w-full bg-[#047857] hover:bg-[#065f46] text-white font-bold py-3.5 px-4 rounded-2xl transition-all hover:shadow-md active:scale-[0.98] text-sm focus:outline-none"
             >
-              Bắt đầu quét
+              Thêm 250ml
             </button>
           </div>
-        )}
+
+        </div>
+
+        {/* QUÉT GẦN ĐÂY SECTION */}
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-extrabold text-slate-800 tracking-tight">Quét gần đây</h2>
+            <button
+              onClick={() => navigate("/history")}
+              className="text-xs text-[#047857] hover:text-[#065f46] font-bold transition-colors flex items-center gap-0.5"
+            >
+              Xem tất cả
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {combinedScans.length > 0 ? (
+              combinedScans.map((scan, idx) => (
+                <div
+                  key={scan.id || idx}
+                  className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 cursor-pointer group"
+                  onClick={() => (onSelectScan ? onSelectScan(scan) : onStartScan())}
+                >
+                  {/* Food Image */}
+                  <div className="relative h-44 bg-slate-50 overflow-hidden rounded-t-3xl">
+                    <img
+                      src={getFoodImage(scan)}
+                      alt={scan.foodName}
+                      className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                    />
+                    {/* Score Badge */}
+                    <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-sm border border-slate-100/50 flex items-center gap-1">
+                      <span className={`text-xs font-extrabold ${getScoreColor(scan.healthyScore)}`}>
+                        {scan.healthyScore}
+                      </span>
+                      <span className="text-[9px] font-bold text-slate-400 tracking-wider">SCORE</span>
+                    </div>
+                  </div>
+
+                  {/* Food Info */}
+                  <div className="p-5">
+                    <h4 className="font-bold text-slate-800 text-sm mb-1 truncate">
+                      {scan.foodName}
+                    </h4>
+                    <p className="text-xs font-semibold text-slate-400 mb-4">
+                      {Math.round(scan.calories)} kcal • {scan.isFiberDisplay ? `${scan.fiber || 8}g Fiber` : `${Math.round(scan.protein)}g Protein`}
+                    </p>
+                    <div className="flex">
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold border ${getTagStyle(getScanTag(scan))}`}>
+                        {getScanTag(scan)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-full bg-white rounded-3xl p-10 border border-slate-100 shadow-sm text-center">
+                <p className="text-slate-400 font-bold text-sm">Chưa có lịch sử quét thực phẩm.</p>
+                <p className="text-slate-400 text-xs mt-1 font-medium">Bấm nút quét bên dưới để bắt đầu bữa ăn lành mạnh!</p>
+                <button
+                  onClick={() => onStartScan && onStartScan()}
+                  className="mt-5 inline-flex items-center gap-2 bg-[#047857] hover:bg-[#065f46] text-white font-extrabold py-3 px-6 rounded-2xl transition-all text-xs focus:outline-none hover:shadow-md active:scale-95"
+                >
+                  <Camera className="w-4 h-4" />
+                  Quét thực phẩm ngay
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* FLOATING CAMERA BUTTON */}
       <button
         onClick={() => onStartScan && onStartScan()}
-        className="fixed bottom-8 right-8 w-16 h-16 bg-teal-600 hover:bg-teal-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 z-40"
+        className="fixed bottom-8 right-8 w-14 h-14 bg-[#047857] hover:bg-[#065f46] text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-40 focus:outline-none"
       >
-        <Camera className="w-8 h-8" />
+        <Camera className="w-6 h-6 stroke-[1.8]" />
       </button>
     </div>
   );

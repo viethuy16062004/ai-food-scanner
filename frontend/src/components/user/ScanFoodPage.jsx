@@ -1,7 +1,7 @@
 import React, { useRef, useState, useCallback } from "react";
 import Webcam from "react-webcam";
 import { api } from "../../services/api";
-import { Camera, Upload, Trash2, CheckCircle, AlertTriangle, Shield } from "lucide-react";
+import { Camera, Upload, Trash2, CheckCircle, AlertTriangle, Shield, ChevronRight } from "lucide-react";
 
 export default function ScanFoodPage({ onScanSuccess, onBack }) {
   const webcamRef = useRef(null);
@@ -12,10 +12,12 @@ export default function ScanFoodPage({ onScanSuccess, onBack }) {
   const [hasCamera, setHasCamera] = useState(true);
   const [detectedFood, setDetectedFood] = useState(null);
   const [capturedImage, setCapturedImage] = useState(null);
+  const [scanResult, setScanResult] = useState(null);
 
   const handleCapture = useCallback(async () => {
     if (!webcamRef.current) return;
     setError("");
+    setScanResult(null);
     setLoading(true);
 
     try {
@@ -25,7 +27,7 @@ export default function ScanFoodPage({ onScanSuccess, onBack }) {
       }
 
       setCapturedImage(imageSrc);
-      setDetectedFood("Đang nhận diện: Salad tuối");
+      setDetectedFood("Đang nhận diện...");
 
       console.log("Image captured from camera. Analyzing...");
       const result = await api.scanFoodImage(imageSrc);
@@ -35,10 +37,8 @@ export default function ScanFoodPage({ onScanSuccess, onBack }) {
           setError(result.analysis.summary || "Ảnh không chứa thực phẩm có thể nhận diện.");
           setDetectedFood(null);
         } else {
-          setDetectedFood(`Đang nhận diện: ${result.analysis.foodName}`);
-          setTimeout(() => {
-            onScanSuccess(result.analysis);
-          }, 1000);
+          setDetectedFood(`Đã nhận diện: ${result.analysis.foodName}`);
+          setScanResult(result.analysis);
         }
       } else {
         throw new Error("Kết quả trả về không hợp lệ.");
@@ -50,12 +50,13 @@ export default function ScanFoodPage({ onScanSuccess, onBack }) {
     } finally {
       setLoading(false);
     }
-  }, [webcamRef, onScanSuccess]);
+  }, [webcamRef]);
 
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setError("");
+    setScanResult(null);
     setLoading(true);
 
     try {
@@ -74,10 +75,8 @@ export default function ScanFoodPage({ onScanSuccess, onBack }) {
               setError(result.analysis.summary || "Ảnh không chứa thực phẩm có thể nhận diện.");
               setDetectedFood(null);
             } else {
-              setDetectedFood(`Đang nhận diện: ${result.analysis.foodName}`);
-              setTimeout(() => {
-                onScanSuccess(result.analysis);
-              }, 1000);
+              setDetectedFood(`Đã nhận diện: ${result.analysis.foodName}`);
+              setScanResult(result.analysis);
             }
           } else {
             throw new Error("Kết quả trả về không hợp lệ.");
@@ -105,6 +104,7 @@ export default function ScanFoodPage({ onScanSuccess, onBack }) {
   const clearCapture = () => {
     setCapturedImage(null);
     setDetectedFood(null);
+    setScanResult(null);
     setError("");
   };
 
@@ -119,29 +119,30 @@ export default function ScanFoodPage({ onScanSuccess, onBack }) {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-12">
+    <div className="min-h-screen bg-[#f8fafc] py-8">
+      <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* LEFT SIDE - Camera Scanner */}
           <div className="lg:col-span-3">
-            <h1 className="text-4xl font-bold text-gray-900 mb-8">Quét thực phẩm AI</h1>
+            <div className="flex items-center gap-4 mb-6">
+              <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Quét thực phẩm AI</h1>
+            </div>
 
             {/* Camera Preview Box */}
-            <div className="relative w-full aspect-square bg-black rounded-3xl overflow-hidden border-4 border-teal-600 shadow-2xl flex items-center justify-center mb-6">
+            <div className="relative w-full aspect-square bg-[#0c1613] rounded-3xl overflow-hidden border-4 border-emerald-700 shadow-lg flex items-center justify-center mb-6">
               {/* Corner brackets */}
-              <div className="absolute top-4 left-4 w-8 h-8 border-t-3 border-l-3 border-teal-500 z-10"></div>
-              <div className="absolute top-4 right-4 w-8 h-8 border-t-3 border-r-3 border-teal-500 z-10"></div>
-              <div className="absolute bottom-4 left-4 w-8 h-8 border-b-3 border-l-3 border-teal-500 z-10"></div>
-              <div className="absolute bottom-4 right-4 w-8 h-8 border-b-3 border-r-3 border-teal-500 z-10"></div>
+              <div className="absolute top-4 left-4 w-8 h-8 border-t-4 border-l-4 border-emerald-500 z-10 rounded-tl-md"></div>
+              <div className="absolute top-4 right-4 w-8 h-8 border-t-4 border-r-4 border-emerald-500 z-10 rounded-tr-md"></div>
+              <div className="absolute bottom-4 left-4 w-8 h-8 border-b-4 border-l-4 border-emerald-500 z-10 rounded-bl-md"></div>
+              <div className="absolute bottom-4 right-4 w-8 h-8 border-b-4 border-r-4 border-emerald-500 z-10 rounded-br-md"></div>
 
               {/* Camera or captured image */}
               {capturedImage ? (
                 <div className="w-full h-full relative">
                   <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />
                   {detectedFood && (
-                    <div className="absolute top-8 left-8 bg-white/90 backdrop-blur text-gray-800 px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
-                      • {detectedFood.replace("Đang nhận diện: ", "")}
+                    <div className="absolute top-6 left-6 bg-white/95 backdrop-blur-sm text-slate-800 px-4 py-2 rounded-full text-xs font-bold shadow-sm border border-slate-100">
+                      • {detectedFood.replace("Đã nhận diện: ", "")}
                     </div>
                   )}
                 </div>
@@ -156,21 +157,23 @@ export default function ScanFoodPage({ onScanSuccess, onBack }) {
                 />
               ) : (
                 <div className="text-white text-center">
-                  <Camera className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p>Camera không khả dụng</p>
+                  <Camera className="w-16 h-16 mx-auto mb-4 opacity-50 text-slate-300" />
+                  <p className="text-slate-400 font-semibold text-sm">Camera không khả dụng</p>
                 </div>
               )}
 
               {/* Center Camera Button */}
-              <button
-                onClick={handleCapture}
-                disabled={loading || capturedImage}
-                className="absolute bottom-8 w-16 h-16 bg-white rounded-full shadow-2xl flex items-center justify-center z-20 hover:scale-110 transition-transform disabled:opacity-50"
-              >
-                <div className="w-12 h-12 border-4 border-gray-300 rounded-full flex items-center justify-center bg-gray-100">
-                  <div className="w-6 h-6 bg-gray-400 rounded-full"></div>
-                </div>
-              </button>
+              {!capturedImage && (
+                <button
+                  onClick={handleCapture}
+                  disabled={loading}
+                  className="absolute bottom-6 w-16 h-16 bg-white hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 rounded-full shadow-2xl flex items-center justify-center z-20 hover:scale-105 active:scale-95 transition-transform disabled:opacity-50 border border-slate-200"
+                >
+                  <div className="w-12 h-12 border-4 border-slate-300 rounded-full flex items-center justify-center bg-slate-50">
+                    <div className="w-6 h-6 bg-emerald-700 rounded-full animate-pulse"></div>
+                  </div>
+                </button>
+              )}
             </div>
 
             {/* Action Buttons */}
@@ -178,16 +181,17 @@ export default function ScanFoodPage({ onScanSuccess, onBack }) {
               <button
                 onClick={toggleCamera}
                 disabled={loading || capturedImage}
-                className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-6 rounded-full transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 bg-[#047857] hover:bg-[#065f46] text-white font-bold py-3 px-6 rounded-2xl transition-all disabled:opacity-50 text-sm focus:outline-none"
               >
-                <Camera className="w-5 h-5" />
+                <Camera className="w-4 h-4" />
                 Máy ảnh
               </button>
 
               {capturedImage && (
                 <button
                   onClick={clearCapture}
-                  className="flex items-center gap-2 bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-3 px-6 rounded-full transition-colors"
+                  className="flex items-center justify-center w-12 h-12 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-2xl border border-rose-100 hover:border-rose-200 transition-colors focus:outline-none"
+                  title="Xóa ảnh chụp"
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>
@@ -196,29 +200,30 @@ export default function ScanFoodPage({ onScanSuccess, onBack }) {
 
             {/* Error Message */}
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+              <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-sm font-semibold">
                 {error}
               </div>
             )}
 
             {/* Loading State */}
             {loading && (
-              <div className="mb-6 p-4 bg-teal-50 border border-teal-200 text-teal-700 rounded-lg text-sm">
-                Đang phân tích ảnh...
+              <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-[#047857] rounded-2xl text-sm font-semibold flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-[#047857] border-t-transparent rounded-full animate-spin"></div>
+                Đang phân tích hình ảnh thực phẩm bằng AI...
               </div>
             )}
 
             {/* Upload Area */}
-            <div className="border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center bg-gray-50">
-              <Upload className="w-12 h-12 text-teal-600 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">Kéo và thả ảnh tại đây</h3>
-              <p className="text-gray-600 text-sm mb-6">Hỗ trợ JPG, PNG (Tối đa 10MB)</p>
+            <div className="border-2 border-dashed border-slate-300/80 rounded-3xl p-10 text-center bg-white shadow-sm hover:border-emerald-500 transition-all duration-300">
+              <Upload className="w-12 h-12 text-[#047857] mx-auto mb-4" />
+              <h3 className="text-lg font-bold text-slate-800 mb-1">Tải ảnh thực phẩm lên</h3>
+              <p className="text-slate-400 text-xs mb-6 font-medium">Hỗ trợ JPG, PNG (Tối đa 10MB)</p>
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={loading}
-                className="bg-teal-600 hover:bg-teal-700 text-white font-semibold py-2 px-8 rounded-full transition-colors disabled:opacity-50"
+                className="bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-bold py-2.5 px-6 rounded-2xl transition-colors disabled:opacity-50 text-sm focus:outline-none"
               >
-                Chọn từ máy tính
+                Chọn từ thiết bị
               </button>
               <input
                 ref={fileInputRef}
@@ -233,61 +238,113 @@ export default function ScanFoodPage({ onScanSuccess, onBack }) {
           {/* RIGHT SIDE - Results Panel */}
           <div className="lg:col-span-2">
             {/* Results Header */}
-            <div className="bg-teal-500 rounded-2xl p-6 mb-6">
-              <div className="flex items-center gap-2 text-white font-semibold text-lg">
-                <AlertTriangle className="w-6 h-6" />
-                Kết quả phân tích
+            <div className="bg-[#047857] rounded-3xl p-5 mb-6 shadow-sm">
+              <div className="flex items-center gap-2 text-white font-bold text-base">
+                <AlertTriangle className="w-5 h-5" />
+                Kết quả phân tích sơ bộ
               </div>
             </div>
 
             {/* Results Content */}
-            <div className="bg-gray-50 rounded-2xl p-8 border border-gray-200 mb-6">
-              <p className="text-gray-700 text-center italic text-sm leading-relaxed">
-                Chup hoặc tải ảnh thực phẩm đó AI NutriScan bắt đầu phân tích định dưỡng...
-              </p>
-            </div>
+            {scanResult ? (
+              <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm mb-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-extrabold text-slate-800 text-base">{scanResult.foodName}</h3>
+                  <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${
+                    scanResult.healthyScore >= 80 
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-100" 
+                      : scanResult.healthyScore >= 60 
+                        ? "bg-amber-50 text-amber-700 border-amber-200" 
+                        : "bg-rose-50 text-rose-700 border-rose-200"
+                  }`}>
+                    {scanResult.healthyScore} Điểm
+                  </span>
+                </div>
+
+                {/* Nutrient Summary Grid */}
+                <div className="grid grid-cols-4 gap-2 bg-slate-50 p-4 rounded-2xl mb-4 text-center border border-slate-100/50">
+                  <div>
+                    <span className="block text-sm font-extrabold text-slate-800">{Math.round(scanResult.calories)}</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase">Kcal</span>
+                  </div>
+                  <div>
+                    <span className="block text-sm font-extrabold text-slate-800">{Math.round(scanResult.protein)}g</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase">Đạm</span>
+                  </div>
+                  <div>
+                    <span className="block text-sm font-extrabold text-slate-800">{Math.round(scanResult.carbs)}g</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase">Tinh bột</span>
+                  </div>
+                  <div>
+                    <span className="block text-sm font-extrabold text-slate-800">{Math.round(scanResult.fat)}g</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase">Béo</span>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-500 leading-relaxed mb-6 font-semibold">
+                  {scanResult.summary}
+                </p>
+
+                <button
+                  onClick={() => onScanSuccess(scanResult)}
+                  className="w-full bg-[#047857] hover:bg-[#065f46] text-white font-bold py-3.5 px-4 rounded-2xl transition-all hover:shadow-md active:scale-[0.98] text-sm flex items-center justify-center gap-1.5 focus:outline-none"
+                >
+                  Xem phân tích chi tiết
+                  <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+                </button>
+              </div>
+            ) : (
+              <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm mb-6">
+                <p className="text-slate-400 text-center italic text-xs leading-relaxed font-semibold">
+                  Chụp hoặc tải ảnh thực phẩm lên để AI NutriScan bắt đầu phân tích dinh dưỡng...
+                </p>
+              </div>
+            )}
 
             {/* Tips Section */}
-            <div>
-              <h3 className="text-xl font-bold text-gray-800 mb-6">Mẹo quét chuẩn</h3>
+            <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
+              <h3 className="text-sm font-extrabold text-slate-800 mb-5">Mẹo quét chuẩn</h3>
 
-              <div className="space-y-5">
+              <div className="space-y-4">
                 {/* Tip 1 */}
-                <div className="flex gap-4">
+                <div className="flex gap-3">
                   <div className="flex-shrink-0">
-                    <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
-                      <Shield className="w-5 h-5 text-teal-600" />
+                    <div className="w-8 h-8 bg-emerald-50 rounded-full flex items-center justify-center">
+                      <Shield className="w-4 h-4 text-emerald-600" />
                     </div>
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-800 text-sm mb-1">Đảm bảo dự ảnh sáng đó AI nhận diện màu sắc thực phẩm tốt nhất.</p>
-                    <p className="text-gray-600 text-sm"></p>
+                    <p className="font-bold text-slate-700 text-xs leading-normal">
+                      Đảm bảo đủ ánh sáng để AI nhận diện màu sắc thực phẩm tốt nhất.
+                    </p>
                   </div>
                 </div>
 
                 {/* Tip 2 */}
-                <div className="flex gap-4">
+                <div className="flex gap-3">
                   <div className="flex-shrink-0">
-                    <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
-                      <CheckCircle className="w-5 h-5 text-teal-600" />
+                    <div className="w-8 h-8 bg-emerald-50 rounded-full flex items-center justify-center">
+                      <CheckCircle className="w-4 h-4 text-emerald-600" />
                     </div>
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-800 text-sm mb-1">Đặt thực phẩm ở giữa khung hình, tránh bị che khuất.</p>
-                    <p className="text-gray-600 text-sm"></p>
+                    <p className="font-bold text-slate-700 text-xs leading-normal">
+                      Đặt thực phẩm ở giữa khung hình, tránh bị che khuất.
+                    </p>
                   </div>
                 </div>
 
                 {/* Tip 3 */}
-                <div className="flex gap-4">
+                <div className="flex gap-3">
                   <div className="flex-shrink-0">
-                    <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
-                      <Shield className="w-5 h-5 text-teal-600" />
+                    <div className="w-8 h-8 bg-emerald-50 rounded-full flex items-center justify-center">
+                      <Shield className="w-4 h-4 text-emerald-600" />
                     </div>
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-800 text-sm mb-1">Dùng với bữa ăn nhiều mẽn, hãy quét từng món riêng biệt để chính xác hơn.</p>
-                    <p className="text-gray-600 text-sm"></p>
+                    <p className="font-bold text-slate-700 text-xs leading-normal">
+                      Với bữa ăn nhiều món, hãy quét từng món riêng biệt để chính xác hơn.
+                    </p>
                   </div>
                 </div>
               </div>

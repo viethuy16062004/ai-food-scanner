@@ -5,10 +5,9 @@ import {
 } from "lucide-react";
 
 // Mini sparkline chart (decorative)
-function MiniSparkline() {
-  const points = [40, 35, 50, 45, 55, 48, 60, 52, 58, 50, 55, 62];
-  const max = Math.max(...points);
-  const min = Math.min(...points);
+function MiniSparkline({ points = [40, 35, 50, 45, 55, 48, 60, 52, 58, 50, 55, 62] }) {
+  const max = Math.max(...points, 1);
+  const min = Math.min(...points, 0);
   const h = 60, w = 200;
   const path = points.map((p, i) => {
     const x = (i / (points.length - 1)) * w;
@@ -32,6 +31,7 @@ function MiniSparkline() {
 
 export default function HistoryPage() {
   const [history, setHistory] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [mealFilter, setMealFilter] = useState("all");
@@ -41,6 +41,9 @@ export default function HistoryPage() {
       try {
         const data = await api.getScanHistory();
         setHistory(data || []);
+        
+        const analyticsData = await api.getDailyAnalytics();
+        setAnalytics(analyticsData);
       } catch (err) {
         console.error("Failed to fetch history:", err);
       } finally {
@@ -67,6 +70,7 @@ export default function HistoryPage() {
   };
 
   const totalWeekCalories = history.reduce((sum, item) => sum + (item.calories || 0), 0);
+  const weeklyCaloriePoints = analytics?.weeklyHistory?.map(item => item.calories) || [0, 0, 0, 0, 0, 0, 0];
 
   const filteredHistory = history.filter((item) => {
     if (searchQuery && !item.foodName?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
@@ -200,12 +204,22 @@ export default function HistoryPage() {
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
             <h3 className="font-bold text-gray-800 text-base mb-1">Calo tuần này</h3>
             <div className="flex items-baseline gap-2 mb-4">
-              <span className="text-4xl font-extrabold text-teal-700">{totalWeekCalories.toLocaleString()}</span>
+              <span className="text-4xl font-extrabold text-teal-700">
+                {analytics?.weeklyHistory ? analytics.weeklyHistory.reduce((sum, item) => sum + item.calories, 0).toLocaleString() : totalWeekCalories.toLocaleString()}
+              </span>
               <span className="text-sm text-gray-500">Tổng kcal</span>
             </div>
-            <MiniSparkline />
+            <MiniSparkline points={weeklyCaloriePoints} />
             <div className="flex justify-between text-[10px] text-gray-400 mt-1 px-1">
-              <span>CN</span><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span>
+              {analytics?.weeklyHistory ? (
+                analytics.weeklyHistory.map((item, idx) => (
+                  <span key={idx}>{item.dayOfWeek}</span>
+                ))
+              ) : (
+                <>
+                  <span>CN</span><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span>
+                </>
+              )}
             </div>
           </div>
 

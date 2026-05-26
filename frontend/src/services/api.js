@@ -97,6 +97,86 @@ export const api = {
     return res.data;
   },
 
+  // Meal Planner APIs
+  getTodayMealPlan: async () => {
+    const res = await axios.get(`${SPRINGBOOT_URL}/meal-plans/today`, {
+      headers: getAuthHeader()
+    });
+    return res.data;
+  },
+
+  updateDietGoal: async (dietaryGoal) => {
+    const res = await axios.post(`${SPRINGBOOT_URL}/meal-plans/diet`, { dietaryGoal }, {
+      headers: getAuthHeader()
+    });
+    return res.data;
+  },
+
+  swapMealItem: async (itemId) => {
+    const res = await axios.put(`${SPRINGBOOT_URL}/meal-plans/items/${itemId}/swap`, {}, {
+      headers: getAuthHeader()
+    });
+    return res.data;
+  },
+
+  swapAllMeals: async () => {
+    const res = await axios.put(`${SPRINGBOOT_URL}/meal-plans/swap-all`, {}, {
+      headers: getAuthHeader()
+    });
+    return res.data;
+  },
+
+  // Shopping List APIs
+  getShoppingList: async () => {
+    const res = await axios.get(`${SPRINGBOOT_URL}/shopping-list`, {
+      headers: getAuthHeader()
+    });
+    return res.data;
+  },
+
+  toggleShoppingItem: async (itemId) => {
+    const res = await axios.put(`${SPRINGBOOT_URL}/shopping-list/${itemId}/toggle`, {}, {
+      headers: getAuthHeader()
+    });
+    return res.data;
+  },
+
+  addShoppingItem: async (itemName, storeCategory) => {
+    const res = await axios.post(`${SPRINGBOOT_URL}/shopping-list`, { itemName, storeCategory }, {
+      headers: getAuthHeader()
+    });
+    return res.data;
+  },
+
+  deleteShoppingItem: async (itemId) => {
+    const res = await axios.delete(`${SPRINGBOOT_URL}/shopping-list/${itemId}`, {
+      headers: getAuthHeader()
+    });
+    return res.data;
+  },
+
+  // Health Log APIs
+  getLatestHealthLog: async () => {
+    const res = await axios.get(`${SPRINGBOOT_URL}/health-logs/latest`, {
+      headers: getAuthHeader()
+    });
+    return res.data;
+  },
+
+  getHealthLogHistory: async () => {
+    const res = await axios.get(`${SPRINGBOOT_URL}/health-logs/history`, {
+      headers: getAuthHeader()
+    });
+    return res.data;
+  },
+
+  saveTodayHealthLog: async (data) => {
+    const res = await axios.post(`${SPRINGBOOT_URL}/health-logs`, data, {
+      headers: getAuthHeader()
+    });
+    return res.data;
+  },
+
   // Admin APIs
   getAdminUsers: async () => {
     const res = await axios.get(`${SPRINGBOOT_URL}/admin/users`, {

@@ -5,6 +5,8 @@ import ScanFoodPage from "./ScanFoodPage";
 import HistoryPage from "./HistoryPage";
 import ProfilePage from "./ProfilePage";
 import AnalysisResultPage from "./AnalysisResultPage";
+import MealPlannerPage from "./MealPlannerPage";
+import HealthLogPage from "./HealthLogPage";
 import Header from "../../layouts/Header";
 import Footer from "../../layouts/Footer";
 
@@ -21,6 +23,8 @@ export default function UserApp({ user, onLogout }) {
     if (path.startsWith("/history")) return "history";
     if (path.startsWith("/profile")) return "profile";
     if (path.startsWith("/result")) return "result";
+    if (path.startsWith("/meal-planner")) return "meal-planner";
+    if (path.startsWith("/health-log")) return "health-log";
     return "home";
   };
 
@@ -46,13 +50,15 @@ export default function UserApp({ user, onLogout }) {
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#f8fafc] text-gray-900 flex flex-col font-sans">
       <Header user={user} onLogout={onLogout} onNavigate={handleNavigate} currentPage={getCurrentPage()} />
 
       <main className="flex-1 w-full relative z-10">
         <Routes>
-          <Route path="/home" element={<HomePage user={user} onStartScan={handleStartScan} onOpenHistory={() => navigate("/history")} />} />
+          <Route path="/home" element={<HomePage user={user} onStartScan={handleStartScan} onSelectScan={handleSelectHistoryScan} />} />
           <Route path="/scan" element={<ScanFoodPage onScanSuccess={handleScanSuccess} onBack={() => navigate(-1)} />} />
+          <Route path="/meal-planner" element={<MealPlannerPage user={user} />} />
+          <Route path="/health-log" element={<HealthLogPage user={user} />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/result" element={<AnalysisResultPage scanResult={activeScan} onBack={() => navigate(-1)} />} />

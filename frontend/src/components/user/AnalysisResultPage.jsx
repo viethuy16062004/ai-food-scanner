@@ -290,6 +290,41 @@ export default function AnalysisResultPage({ scanResult, onBack }) {
               </div>
             </div>
 
+            {/* Detailed Calorie Analysis Card */}
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex flex-col">
+              <h3 className="font-bold text-gray-800 text-sm mb-3">Phân tích mức độ Calo</h3>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-slate-500">Mức năng lượng:</span>
+                <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${
+                  calories < 200 
+                    ? "bg-green-50 text-green-700 border-green-200" 
+                    : calories <= 500 
+                      ? "bg-amber-50 text-amber-700 border-amber-200" 
+                      : "bg-red-50 text-red-700 border-red-200"
+                }`}>
+                  {calories < 200 ? "Thấp (Low-Cal)" : calories <= 500 ? "Trung bình (Moderate)" : "Cao (High-Cal)"}
+                </span>
+              </div>
+              
+              <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden flex mb-3">
+                <div className={`h-full rounded-full transition-all duration-500 ${
+                  calories < 200 
+                    ? "bg-green-500" 
+                    : calories <= 500 
+                      ? "bg-amber-500" 
+                      : "bg-red-500"
+                }`} style={{ width: `${Math.min((calories / 800) * 100, 100)}%` }}></div>
+              </div>
+              
+              <p className="text-xs text-slate-500 leading-relaxed font-semibold">
+                {calories < 200 
+                  ? "Món ăn này có mật độ năng lượng thấp, rất tốt cho việc giảm cân hoặc làm bữa ăn nhẹ mà không lo dư thừa calo."
+                  : calories <= 500 
+                    ? "Lượng calo ở mức vừa phải, lý tưởng cho một bữa ăn chính nhẹ nhàng hoặc bữa ăn bổ sung năng lượng sau khi tập luyện."
+                    : "Đây là món ăn có hàm lượng calo cao. Hãy kiểm soát khẩu phần ăn và kết hợp vận động để duy trì cân nặng hợp lý."}
+              </p>
+            </div>
+
             {/* Macro Distribution Card */}
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
               <h3 className="font-bold text-gray-800 text-base mb-4">Phân bổ đại dưỡng chất</h3>

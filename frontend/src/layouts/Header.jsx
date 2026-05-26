@@ -1,9 +1,10 @@
-import React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { LogOut, User, Activity, Sparkles } from "lucide-react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { LogOut, User, Bell } from "lucide-react";
 
 export default function Header({ user, onLogout, onNavigate, currentPage }) {
   const navigate = useNavigate();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const handleNav = (page) => {
     if (onNavigate) {
@@ -14,66 +15,123 @@ export default function Header({ user, onLogout, onNavigate, currentPage }) {
   };
 
   return (
-    <header className="bg-white sticky top-0 z-40 border-b border-gray-200 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-gradient-to-tr from-teal-500 to-teal-400 text-white shadow-md">
-            <Activity className="w-5 h-5 stroke-[2.5]" />
-          </div>
-          <div>
-            <span className="text-sm font-black tracking-tight bg-gradient-to-r from-teal-600 to-teal-500 bg-clip-text text-transparent">
-              AI NutriScan
-            </span>
-            <span className="hidden sm:inline-flex items-center gap-1 ml-2 text-[10px] bg-teal-100 text-teal-700 border border-teal-300 py-0.5 px-1.5 rounded-full font-bold uppercase">
-              <Sparkles className="w-2.5 h-2.5" /> Gemini 1.5 Flash
-            </span>
-          </div>
+    <header className="bg-white sticky top-0 z-40 border-b border-slate-100 shadow-sm">
+      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        {/* LOGO */}
+        <div className="flex items-center">
+          <span 
+            className="text-xl font-bold text-emerald-800 tracking-tight cursor-pointer hover:opacity-90 transition-opacity" 
+            onClick={() => handleNav("home")}
+          >
+            Al NutriScan
+          </span>
         </div>
 
-        <nav className="hidden md:flex items-center gap-8">
+        {/* NAVIGATION LINKS */}
+        <nav className="hidden md:flex items-center gap-8 h-full">
           <button
             onClick={() => handleNav("home")}
-            className={`font-medium text-sm ${currentPage === "home" ? "text-teal-600 border-b-2 border-teal-600" : "text-gray-600 hover:text-teal-600"}`}
+            className={`font-semibold text-sm h-full flex items-center border-b-2 transition-colors duration-200 ${
+              currentPage === "home"
+                ? "text-[#059669] border-[#059669]"
+                : "text-slate-500 hover:text-[#059669] border-transparent"
+            }`}
           >
-            Home
+            Trang chủ
           </button>
           <button
             onClick={() => handleNav("scan")}
-            className={`font-medium text-sm ${currentPage === "scan" ? "text-teal-600 border-b-2 border-teal-600" : "text-gray-600 hover:text-teal-600"}`}
+            className={`font-semibold text-sm h-full flex items-center border-b-2 transition-colors duration-200 ${
+              currentPage === "scan"
+                ? "text-[#059669] border-[#059669]"
+                : "text-slate-500 hover:text-[#059669] border-transparent"
+            }`}
           >
-            Scan
+            Quét thực phẩm
+          </button>
+          <button
+            onClick={() => handleNav("meal-planner")}
+            className={`font-semibold text-sm h-full flex items-center border-b-2 transition-colors duration-200 ${
+              currentPage === "meal-planner"
+                ? "text-[#059669] border-[#059669]"
+                : "text-slate-500 hover:text-[#059669] border-transparent"
+            }`}
+          >
+            Thực đơn AI
+          </button>
+          <button
+            onClick={() => handleNav("health-log")}
+            className={`font-semibold text-sm h-full flex items-center border-b-2 transition-colors duration-200 ${
+              currentPage === "health-log"
+                ? "text-[#059669] border-[#059669]"
+                : "text-slate-500 hover:text-[#059669] border-transparent"
+            }`}
+          >
+            Nhật ký sức khỏe
           </button>
           <button
             onClick={() => handleNav("history")}
-            className={`font-medium text-sm ${currentPage === "history" ? "text-teal-600 border-b-2 border-teal-600" : "text-gray-600 hover:text-teal-600"}`}
+            className={`font-semibold text-sm h-full flex items-center border-b-2 transition-colors duration-200 ${
+              currentPage === "history"
+                ? "text-[#059669] border-[#059669]"
+                : "text-slate-500 hover:text-[#059669] border-transparent"
+            }`}
           >
-            History
-          </button>
-          <button
-            onClick={() => handleNav("profile")}
-            className={`font-medium text-sm ${currentPage === "profile" ? "text-teal-600 border-b-2 border-teal-600" : "text-gray-600 hover:text-teal-600"}`}
-          >
-            Profile
+            Lịch sử
           </button>
         </nav>
 
+        {/* ACTION BUTTONS */}
         <div className="flex items-center gap-4">
-          <button className="text-gray-600 hover:text-gray-800 p-2 rounded-lg hover:bg-gray-100 transition-colors">
-            <Activity className="w-5 h-5" />
+          {/* Notification Bell */}
+          <button className="text-slate-500 hover:text-[#059669] p-2 rounded-full hover:bg-slate-50 transition-colors focus:outline-none relative">
+            <Bell className="w-5 h-5 stroke-[1.8]" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-500 rounded-full"></span>
           </button>
           
-          <div className="flex items-center gap-2 bg-gray-100 border border-gray-200 py-1.5 px-3 rounded-lg">
-            <User className="w-4 h-4 text-teal-600" />
-            <span className="text-xs font-semibold text-gray-700">{user?.fullName || user?.username}</span>
+          {/* User Profile Avatar Dropdown */}
+          <div className="relative">
+            <button 
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="w-9 h-9 rounded-full bg-slate-100 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-200 flex items-center justify-center text-slate-500 hover:text-[#059669] transition-all focus:outline-none"
+            >
+              <User className="w-5 h-5 stroke-[1.8]" />
+            </button>
+            
+            {dropdownOpen && (
+              <>
+                {/* Backdrop for click outside */}
+                <div className="fixed inset-0 z-10" onClick={() => setDropdownOpen(false)} />
+                <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl border border-slate-100 shadow-xl py-2 z-20">
+                  <div className="px-4 py-2 border-b border-slate-50">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Tài khoản</p>
+                    <p className="font-bold text-slate-800 truncate text-sm">{user?.fullName || user?.username}</p>
+                    <p className="text-xs text-slate-500 truncate">{user?.email || ""}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      handleNav("profile");
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[#059669] transition-colors flex items-center gap-2 font-semibold"
+                  >
+                    <User className="w-4 h-4 stroke-[2]" />
+                    Hồ sơ cá nhân
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      onLogout();
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2 font-semibold border-t border-slate-50"
+                  >
+                    <LogOut className="w-4 h-4 stroke-[2]" />
+                    Đăng xuất
+                  </button>
+                </div>
+              </>
+            )}
           </div>
-
-          <button
-            onClick={onLogout}
-            className="text-gray-600 hover:text-red-600 hover:bg-red-50 p-2.5 rounded-lg border border-transparent hover:border-red-200 transition-all"
-            title="Đăng xuất"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
         </div>
       </div>
     </header>
