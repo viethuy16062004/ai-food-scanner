@@ -162,6 +162,53 @@ export default function ScanFoodPage({ onScanSuccess, onBack }) {
                 </div>
               )}
 
+              {/* QR Code style sweep line and gradient trail to indicate active scanner */}
+              {!capturedImage && hasCamera && !loading && (
+                <div className="absolute left-0 right-0 h-28 bg-gradient-to-t from-emerald-500/15 via-emerald-500/5 to-transparent border-b-2 border-emerald-400/80 shadow-[0_4px_15px_rgba(16,185,129,0.25)] animate-qr-scan pointer-events-none z-10"></div>
+              )}
+
+              {/* AI Scanning Overlay */}
+              {loading && (
+                <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[1px] flex flex-col items-center justify-center z-20">
+                  {/* Glowing QR Scanner Sweep Line and Trail (Cyan/Emerald) */}
+                  <div className="absolute left-0 right-0 h-32 bg-gradient-to-t from-emerald-400/25 via-emerald-500/10 to-transparent border-b-2 border-emerald-300 shadow-[0_6px_20px_rgba(52,211,153,0.4)] animate-qr-scan pointer-events-none"></div>
+                  
+                  {/* Cyber/AI Grid background pattern overlay */}
+                  <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.05)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none"></div>
+
+                  {/* Scanning Crosshair/Reticle in the center */}
+                  <div className="relative w-48 h-48 border border-emerald-500/20 rounded-full flex items-center justify-center animate-pulse">
+                    <div className="w-40 h-40 border border-dashed border-emerald-500/30 rounded-full flex items-center justify-center">
+                      <div className="w-32 h-32 border border-emerald-500/40 rounded-full flex items-center justify-center bg-emerald-950/30">
+                        {/* Scanning icon with rotating ring */}
+                        <div className="w-16 h-16 border-4 border-emerald-500/20 border-t-emerald-400 rounded-full animate-spin"></div>
+                      </div>
+                    </div>
+                    {/* Reticle ticks */}
+                    <div className="absolute top-0 w-0.5 h-3 bg-emerald-400"></div>
+                    <div className="absolute bottom-0 w-0.5 h-3 bg-emerald-400"></div>
+                    <div className="absolute left-0 w-3 h-0.5 bg-emerald-400"></div>
+                    <div className="absolute right-0 w-3 h-0.5 bg-emerald-400"></div>
+                  </div>
+
+                  {/* Status Texts */}
+                  <div className="mt-8 text-center px-4 z-10">
+                    <div className="inline-flex items-center gap-2 bg-emerald-950/80 border border-emerald-500/40 px-4 py-2 rounded-full shadow-lg backdrop-blur-sm">
+                      <span className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping"></span>
+                      <span className="text-emerald-400 font-mono text-xs font-bold tracking-widest uppercase">
+                        AI_SCANNER: ACTIVE
+                      </span>
+                    </div>
+                    <p className="text-white font-extrabold text-sm mt-3 tracking-wide drop-shadow-md">
+                      ĐANG QUÉT DINH DƯỠNG...
+                    </p>
+                    <p className="text-emerald-300/80 font-mono text-[10px] mt-1 uppercase tracking-wider">
+                      Phân tích thành phần bằng Gemini AI
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Center Camera Button */}
               {!capturedImage && (
                 <button
