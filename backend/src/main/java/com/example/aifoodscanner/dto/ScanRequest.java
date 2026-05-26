@@ -11,4 +11,5 @@ public class ScanRequest {
     private Double fat;
     private Integer healthyScore;
     private String rawJsonResult;
+    private String imageUrl;
 }

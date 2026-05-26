@@ -43,6 +43,10 @@ public class ScanHistory {
     @Column(name = "raw_json_result", columnDefinition = "TEXT")
     private String rawJsonResult;
 
+    @Lob
+    @Column(name = "image_url", columnDefinition = "LONGTEXT")
+    private String imageUrl;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

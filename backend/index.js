@@ -90,6 +90,7 @@ app.post("/api/gateway/scan", upload.single("image"), async (req, res) => {
     if (analysis.isFood && authHeader) {
       try {
         console.log("Forwarding scan log to Spring Boot backend...");
+        const base64Image = "data:image/jpeg;base64," + optimizedBuffer.toString("base64");
         await axios.post(`${SPRINGBOOT_URL}/api/scans`, {
           foodName: analysis.foodName,
           calories: analysis.calories,
@@ -97,7 +98,8 @@ app.post("/api/gateway/scan", upload.single("image"), async (req, res) => {
           carbs: analysis.carbs,
           fat: analysis.fat,
           healthyScore: analysis.healthyScore,
-          rawJsonResult: JSON.stringify(analysis)
+          rawJsonResult: JSON.stringify(analysis),
+          imageUrl: base64Image
         }, {
           headers: {
             "Authorization": authHeader,

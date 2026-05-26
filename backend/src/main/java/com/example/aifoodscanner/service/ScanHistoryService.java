@@ -29,6 +29,7 @@ public class ScanHistoryService {
                 .fat(request.getFat())
                 .healthyScore(request.getHealthyScore())
                 .rawJsonResult(request.getRawJsonResult())
+                .imageUrl(request.getImageUrl())
                 .build();
         return scanHistoryRepository.save(scanHistory);
     }
