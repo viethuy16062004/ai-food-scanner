@@ -192,6 +192,20 @@ export const api = {
     return res.data;
   },
 
+  changeUserRole: async (userId, role) => {
+    const res = await axios.put(`${SPRINGBOOT_URL}/admin/users/${userId}/role`, { role }, {
+      headers: getAuthHeader()
+    });
+    return res.data;
+  },
+
+  createUser: async (userData) => {
+    const res = await axios.post(`${SPRINGBOOT_URL}/admin/users`, userData, {
+      headers: getAuthHeader()
+    });
+    return res.data;
+  },
+
   getAdminScans: async () => {
     const res = await axios.get(`${SPRINGBOOT_URL}/admin/scans`, {
       headers: getAuthHeader()

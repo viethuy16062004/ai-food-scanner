@@ -6,7 +6,7 @@ import ScanHistory from "./ScanHistory";
 import FoodLibrary from "./FoodLibrary";
 import SystemSettings from "./SystemSettings";
 import {
-  LayoutDashboard, Users, BookOpen, BarChart3, Settings, LogOut, Leaf, Search, Bell, UserCircle
+  LayoutDashboard, Users, BookOpen, BarChart3, Settings, LogOut, Leaf, Search, Bell, UserCircle, ClipboardList
 } from "lucide-react";
 
 export default function AdminApp({ user, onLogout }) {
@@ -18,7 +18,6 @@ export default function AdminApp({ user, onLogout }) {
     if (path.includes("/admin/users")) return "users";
     if (path.includes("/admin/scans")) return "scans";
     if (path.includes("/admin/library")) return "library";
-    if (path.includes("/admin/analytics")) return "analytics";
     if (path.includes("/admin/settings")) return "settings";
     return "dashboard";
   };
@@ -28,8 +27,8 @@ export default function AdminApp({ user, onLogout }) {
   const navItems = [
     { id: "dashboard", label: "Trang tổng quan", icon: LayoutDashboard, path: "/admin/dashboard" },
     { id: "users", label: "Quản lý người dùng", icon: Users, path: "/admin/users" },
+    { id: "scans", label: "Lịch sử quét", icon: ClipboardList, path: "/admin/scans" },
     { id: "library", label: "Thư viện thực phẩm", icon: BookOpen, path: "/admin/library" },
-    { id: "analytics", label: "Phân tích hệ thống", icon: BarChart3, path: "/admin/analytics" },
     { id: "settings", label: "Cài đặt hệ thống", icon: Settings, path: "/admin/settings" },
   ];
 
@@ -37,8 +36,8 @@ export default function AdminApp({ user, onLogout }) {
     switch (activeTab) {
       case "dashboard": return "Trang tổng quan";
       case "users": return "Quản lý người dùng";
+      case "scans": return "Lịch sử quét";
       case "library": return "Thư viện thực phẩm";
-      case "analytics": return "Phân tích hệ thống";
       case "settings": return "Cài đặt hệ thống";
       default: return "";
     }
@@ -143,9 +142,7 @@ export default function AdminApp({ user, onLogout }) {
               <Route path="/scans" element={<ScanHistory />} />
               <Route path="/library" element={<FoodLibrary />} />
               <Route path="/settings" element={<SystemSettings />} />
-              <Route path="/analytics" element={
-                <div className="p-8"><h2 className="text-2xl font-bold text-gray-800">Phân tích</h2><p className="text-gray-500 mt-2">Tính năng đang được phát triển.</p></div>
-              } />
+              <Route path="/analytics" element={<ScanHistory />} />
               <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
             </Routes>
           </div>

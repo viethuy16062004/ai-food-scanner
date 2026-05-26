@@ -92,7 +92,9 @@ export default function ScanHistory() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-emerald-600" />
-                        <span className="text-gray-700 font-medium">{scan.user?.username || "—"}</span>
+                        <span className="text-gray-700 font-medium">
+                          {scan.user?.fullName ? `${scan.user.fullName} (${scan.user.username})` : (scan.user?.username || "—")}
+                        </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 font-semibold text-gray-900">{scan.foodName}</td>
