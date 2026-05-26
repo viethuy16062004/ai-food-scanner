@@ -202,9 +202,6 @@ export default function ScanFoodPage({ onScanSuccess, onBack }) {
                     <p className="text-white font-extrabold text-sm mt-3 tracking-wide drop-shadow-md">
                       ĐANG QUÉT DINH DƯỠNG...
                     </p>
-                    <p className="text-emerald-300/80 font-mono text-[10px] mt-1 uppercase tracking-wider">
-                      Phân tích thành phần bằng Gemini AI
-                    </p>
                   </div>
                 </div>
               )}
