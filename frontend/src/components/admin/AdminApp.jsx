@@ -26,20 +26,20 @@ export default function AdminApp({ user, onLogout }) {
   const activeTab = getActiveTab();
 
   const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
-    { id: "users", label: "Users", icon: Users, path: "/admin/users" },
-    { id: "library", label: "Food Library", icon: BookOpen, path: "/admin/library" },
-    { id: "analytics", label: "Analytics", icon: BarChart3, path: "/admin/analytics" },
-    { id: "settings", label: "Settings", icon: Settings, path: "/admin/settings" },
+    { id: "dashboard", label: "Trang tổng quan", icon: LayoutDashboard, path: "/admin/dashboard" },
+    { id: "users", label: "Quản lý người dùng", icon: Users, path: "/admin/users" },
+    { id: "library", label: "Thư viện thực phẩm", icon: BookOpen, path: "/admin/library" },
+    { id: "analytics", label: "Phân tích hệ thống", icon: BarChart3, path: "/admin/analytics" },
+    { id: "settings", label: "Cài đặt hệ thống", icon: Settings, path: "/admin/settings" },
   ];
 
   const getPageTitle = () => {
     switch (activeTab) {
-      case "dashboard": return "Dashboard";
+      case "dashboard": return "Trang tổng quan";
       case "users": return "Quản lý người dùng";
-      case "library": return "Thư viện Thực phẩm";
+      case "library": return "Thư viện thực phẩm";
       case "analytics": return "Phân tích hệ thống";
-      case "settings": return "Cấu hình hệ thống";
+      case "settings": return "Cài đặt hệ thống";
       default: return "";
     }
   };
@@ -55,7 +55,7 @@ export default function AdminApp({ user, onLogout }) {
           </div>
           <div>
             <div className="font-extrabold text-sm tracking-tight">AI NutriScan</div>
-            <div className="text-[10px] text-emerald-300/80 font-medium">Management System</div>
+            <div className="text-[10px] text-emerald-300/80 font-medium">Hệ thống quản trị</div>
           </div>
         </div>
 
@@ -158,10 +158,10 @@ export default function AdminApp({ user, onLogout }) {
                 <p className="text-[11px] text-gray-500">© 2024 AI NutriScan. Built for Health.</p>
               </div>
               <div className="flex items-center gap-6 text-[11px] text-gray-500">
-                <a href="#" className="hover:text-gray-700 transition-colors">Privacy Policy</a>
-                <a href="#" className="hover:text-gray-700 transition-colors">Terms of Service</a>
-                <a href="#" className="hover:text-gray-700 transition-colors">Help Center</a>
-                <a href="#" className="hover:text-gray-700 transition-colors">API Documentation</a>
+                <a href="#" className="hover:text-gray-700 transition-colors">Chính sách bảo mật</a>
+                <a href="#" className="hover:text-gray-700 transition-colors">Điều khoản dịch vụ</a>
+                <a href="#" className="hover:text-gray-700 transition-colors">Trung tâm hỗ trợ</a>
+                <a href="#" className="hover:text-gray-700 transition-colors">Tài liệu API</a>
               </div>
             </div>
           </footer>

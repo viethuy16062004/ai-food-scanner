@@ -83,13 +83,13 @@ export default function AdminDashboard({ user }) {
           {/* ========== STATS CARDS ========== */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10">
             <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
-              <p className="text-xs text-gray-500 font-medium mb-1">Lượng quét hôm nay</p>
+              <p className="text-xs text-gray-500 font-medium mb-1">Tổng lượng quét</p>
               <p className="text-3xl font-extrabold text-gray-900">
                 {loading ? "—" : totalScans.toLocaleString()}
               </p>
               <p className="text-xs text-emerald-600 font-semibold mt-1 flex items-center gap-1">
                 <TrendingUp className="w-3.5 h-3.5" />
-                +12.5% so với hôm qua
+                Dữ liệu thời gian thực
               </p>
             </div>
 
@@ -102,14 +102,13 @@ export default function AdminDashboard({ user }) {
             </div>
 
             <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
-              <p className="text-xs text-gray-500 font-medium mb-1">Người dùng Active</p>
+              <p className="text-xs text-gray-500 font-medium mb-1">Người dùng hoạt động</p>
               <p className="text-3xl font-extrabold text-gray-900">
                 {loading ? "—" : (totalActiveUsers >= 1000 ? `${(totalActiveUsers / 1000).toFixed(1)}k` : totalActiveUsers)}
               </p>
               <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                 <Users className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="text-emerald-600 font-semibold">Đang trực tuyến</span>
-                <span className="text-gray-400 ml-1">{loading ? "" : Math.round(totalActiveUsers * 0.06).toLocaleString()}</span>
+                <span className="text-emerald-600 font-semibold">Tài khoản kích hoạt</span>
               </p>
             </div>
 
@@ -245,22 +244,6 @@ export default function AdminDashboard({ user }) {
           </button>
         </div>
       </section>
-
-      {/* ========== FOOTER ========== */}
-      <footer className="border-t border-gray-200 bg-white">
-        <div className="max-w-6xl mx-auto px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
-            <span className="font-bold text-gray-800 text-sm">AI NutriScan</span>
-            <p className="text-xs text-gray-400 mt-0.5">© 2024 AI NutriScan. Built for Health.</p>
-          </div>
-          <div className="flex items-center gap-6 text-xs text-gray-500">
-            <a href="#" className="hover:text-gray-700 transition-colors">Chính sách Bảo mật</a>
-            <a href="#" className="hover:text-gray-700 transition-colors">Điều khoản Dịch vụ</a>
-            <a href="#" className="hover:text-gray-700 transition-colors">Trung tâm Trợ giúp</a>
-            <a href="#" className="hover:text-gray-700 transition-colors">Tài liệu API</a>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

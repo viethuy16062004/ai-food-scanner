@@ -49,74 +49,82 @@ export default function ScanHistory() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="p-8 w-full flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-extrabold text-slate-100">Lịch sử quét toàn hệ thống</h2>
-          <p className="text-slate-500 text-sm mt-1">Tất cả các lượt quét thực phẩm từ mọi người dùng</p>
+          <h2 className="text-xl font-bold text-gray-900">Lịch sử quét toàn hệ thống</h2>
+          <p className="text-gray-500 text-sm mt-1">Tất cả các lượt quét thực phẩm từ mọi người dùng</p>
         </div>
         <button 
           onClick={fetchScans}
-          className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-200 bg-slate-900 border border-slate-800 hover:bg-slate-800 px-4 py-2 rounded-xl transition-all"
+          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 bg-white border border-gray-200 hover:bg-gray-50 px-4 py-2 rounded-xl transition-all shadow-sm font-semibold"
         >
           <RefreshCw className="w-4 h-4" />
           Tải lại
         </button>
       </div>
 
-      <div className="glass rounded-2xl border border-slate-800 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-800 bg-slate-900/50">
-              <th className="text-left px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">ID</th>
-              <th className="text-left px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Người dùng</th>
-              <th className="text-left px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Thực phẩm</th>
-              <th className="text-left px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Calo</th>
-              <th className="text-left px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Điểm</th>
-              <th className="text-left px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Thời gian</th>
-            </tr>
-          </thead>
-          <tbody>
-            {scans.length === 0 ? (
+      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="text-xs text-gray-500 bg-gray-50/50 border-b border-gray-100">
               <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
-                  <ClipboardList className="w-10 h-10 mx-auto mb-2 text-slate-700" />
-                  Chưa có lượt quét nào trong hệ thống.
-                </td>
+                <th className="px-6 py-4 font-bold uppercase tracking-wider">ID</th>
+                <th className="px-6 py-4 font-bold uppercase tracking-wider">Người dùng</th>
+                <th className="px-6 py-4 font-bold uppercase tracking-wider">Thực phẩm</th>
+                <th className="px-6 py-4 font-bold uppercase tracking-wider">Calo</th>
+                <th className="px-6 py-4 font-bold uppercase tracking-wider">Điểm</th>
+                <th className="px-6 py-4 font-bold uppercase tracking-wider">Thời gian</th>
               </tr>
-            ) : (
-              scans.map((scan) => (
-                <tr key={scan.id} className="border-b border-slate-800/50 hover:bg-slate-900/30 transition-all">
-                  <td className="px-6 py-4 text-slate-400 font-mono text-xs">{scan.id}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <User className="w-3.5 h-3.5 text-slate-500" />
-                      <span className="text-slate-300 text-xs">{scan.user?.username || "—"}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-slate-200 font-semibold">{scan.foodName}</td>
-                  <td className="px-6 py-4">
-                    <span className="flex items-center gap-1 text-orange-400 font-semibold text-xs">
-                      <Flame className="w-3.5 h-3.5" />
-                      {Math.round(scan.calories)} kcal
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`text-xs font-bold py-1 px-2 rounded-md ${getScoreBadge(scan.healthyScore)}`}>
-                      {scan.healthyScore}đ
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="flex items-center gap-1 text-slate-500 text-xs">
-                      <Calendar className="w-3.5 h-3.5" />
-                      {formatDate(scan.createdAt)}
-                    </span>
+            </thead>
+            <tbody>
+              {scans.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
+                    <ClipboardList className="w-10 h-10 mx-auto mb-2 text-gray-300" />
+                    Chưa có lượt quét nào trong hệ thống.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                scans.map((scan) => (
+                  <tr key={scan.id} className="bg-white border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                    <td className="px-6 py-4 text-gray-500 font-mono text-xs">#{scan.id}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4 text-emerald-600" />
+                        <span className="text-gray-700 font-medium">{scan.user?.username || "—"}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 font-semibold text-gray-900">{scan.foodName}</td>
+                    <td className="px-6 py-4">
+                      <span className="flex items-center gap-1 text-orange-600 font-semibold text-xs">
+                        <Flame className="w-3.5 h-3.5" />
+                        {Math.round(scan.calories)} kcal
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex px-3 py-1 rounded-full text-[11px] font-bold ${
+                        scan.healthyScore >= 70
+                          ? "bg-emerald-50 text-emerald-700"
+                          : scan.healthyScore >= 40
+                          ? "bg-orange-50 text-orange-700"
+                          : "bg-red-50 text-red-700"
+                      }`}>
+                        {scan.healthyScore} điểm
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="flex items-center gap-1 text-gray-500 text-xs">
+                        <Calendar className="w-3.5 h-3.5" />
+                        {formatDate(scan.createdAt)}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

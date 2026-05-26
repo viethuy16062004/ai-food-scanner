@@ -6,14 +6,17 @@ export default function UserManagement() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [systemStats, setSystemStats] = useState(null);
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
       const data = await api.getAdminUsers();
       setUsers(data || []);
+      const statsData = await api.getAdminStats();
+      setSystemStats(statsData);
     } catch (err) {
-      console.error("Failed to fetch users:", err);
+      console.error("Failed to fetch users and stats:", err);
     } finally {
       setLoading(false);
     }
@@ -23,12 +26,24 @@ export default function UserManagement() {
     fetchUsers();
   }, []);
 
+  const totalUsersCount = systemStats?.totalUsers || users.length;
+  const totalScansCount = systemStats?.totalScans || 0;
+  const lockedUsersCount = users.filter(u => !u.enabled).length;
+  const enabledUsersCount = users.filter(u => u.enabled).length;
+
   const stats = [
-    { label: "Người dùng mới", value: "1,284", icon: UserPlus, color: "text-emerald-600", bg: "bg-emerald-50", trend: "+12%" },
-    { label: "Tổng lượt quét", value: "45,902", icon: Camera, color: "text-emerald-600", bg: "bg-emerald-50", trend: "+24%" },
-    { label: "Tài khoản khóa", value: "12", icon: Lock, color: "text-gray-500", bg: "bg-gray-100", trend: "-2%", trendColor: "text-red-500" },
-    { label: "Hoạt động (7 ngày)", value: "892", icon: Activity, color: "text-emerald-600", bg: "bg-emerald-50", trend: "98%" },
+    { label: "Tổng người dùng", value: totalUsersCount.toLocaleString(), icon: UserPlus, color: "text-emerald-600", bg: "bg-emerald-50", trend: "Thời gian thực" },
+    { label: "Tổng lượt quét", value: totalScansCount.toLocaleString(), icon: Camera, color: "text-emerald-600", bg: "bg-emerald-50", trend: "Thời gian thực" },
+    { label: "Tài khoản khóa", value: lockedUsersCount.toLocaleString(), icon: Lock, color: "text-gray-500", bg: "bg-gray-100", trend: "Mới cập nhật" },
+    { label: "Tài khoản hoạt động", value: enabledUsersCount.toLocaleString(), icon: Activity, color: "text-emerald-600", bg: "bg-emerald-50", trend: "Mới cập nhật" },
   ];
+
+  const filteredUsers = users.filter(u => {
+    const query = searchQuery.toLowerCase();
+    return (u.fullName || "").toLowerCase().includes(query) ||
+           (u.username || "").toLowerCase().includes(query) ||
+           (u.email || "").toLowerCase().includes(query);
+  });
 
   return (
     <div className="p-8 w-full">
@@ -63,7 +78,7 @@ export default function UserManagement() {
               Bộ lọc
             </button>
             <span className="text-sm text-gray-500">
-              Đang hiển thị <span className="font-bold text-gray-700">1-10</span> trong <span className="font-bold text-gray-700">1,284</span> người dùng
+              Đang hiển thị <span className="font-bold text-gray-700">{filteredUsers.length}</span> người dùng
             </span>
           </div>
 
@@ -101,10 +116,10 @@ export default function UserManagement() {
             <tbody>
               {loading ? (
                 <tr><td colSpan={6} className="text-center py-10"><div className="w-8 h-8 mx-auto border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div></td></tr>
-              ) : users.length === 0 ? (
+              ) : filteredUsers.length === 0 ? (
                 <tr><td colSpan={6} className="text-center py-10 text-gray-500">Không có dữ liệu</td></tr>
               ) : (
-                users.slice(0, 10).map((u, i) => (
+                filteredUsers.map((u, i) => (
                   <tr key={u.id} className="bg-white border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                     <td className="px-6 py-4 font-semibold text-gray-900 flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${i % 2 === 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}`}>
