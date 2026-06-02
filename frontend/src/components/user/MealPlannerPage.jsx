@@ -1,18 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { api } from "../../services/api";
-import { Sparkles, RefreshCw, CheckSquare, Square, MessageSquare, Plus, Check, Trash2, Send } from "lucide-react";
+import { Sparkles, RefreshCw, CheckSquare, Square, MessageSquare, Plus, Check, Trash2 } from "lucide-react";
 
-export default function MealPlannerPage({ user }) {
+export default function MealPlannerPage({ user, onOpenChat }) {
   const [mealPlan, setMealPlan] = useState(null);
   const [shoppingList, setShoppingList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newIngredient, setNewIngredient] = useState("");
   const [newCategory, setNewCategory] = useState("Siêu thị");
-  const [chatOpen, setChatOpen] = useState(false);
-  const [chatMessage, setChatMessage] = useState("");
-  const [chatLog, setChatLog] = useState([
-    { sender: "ai", text: "Chào bạn! Mình là AI Coach. Mình có thể giúp gì cho thực đơn hôm nay của bạn?" }
-  ]);
 
   const fetchPlanAndList = async () => {
     try {
@@ -100,25 +95,6 @@ export default function MealPlannerPage({ user }) {
 
   const handleSendZalo = () => {
     alert("Đã gửi danh sách mua sắm nguyên liệu qua Zalo của bạn!");
-  };
-
-  const handleSendChat = (e) => {
-    e.preventDefault();
-    if (!chatMessage.trim()) return;
-    
-    const userMsg = { sender: "user", text: chatMessage };
-    setChatLog(prev => [...prev, userMsg]);
-    setChatMessage("");
-
-    setTimeout(() => {
-      let reply = "Mình ghi nhận rồi nhé! Bạn muốn thay đổi món nào trong ngày để phù hợp hơn?";
-      if (chatMessage.toLowerCase().includes("calo") || chatMessage.toLowerCase().includes("calories")) {
-        reply = "Để điều chỉnh lượng Calo nạp vào hôm nay, bạn có thể tăng lượng đạm hoặc đổi sang chế độ ăn Low Carb hoặc Keto nha.";
-      } else if (chatMessage.toLowerCase().includes("mua") || chatMessage.toLowerCase().includes("chợ")) {
-        reply = "Danh sách nguyên liệu đã được tự động tối ưu hóa. Bạn đã mua được những gì rồi?";
-      }
-      setChatLog(prev => [...prev, { sender: "ai", text: reply }]);
-    }, 1000);
   };
 
   // Helper date formatted in Vietnamese
@@ -370,7 +346,7 @@ export default function MealPlannerPage({ user }) {
               Trò chuyện với AI Coach để điều chỉnh thực đơn phù hợp nhất với khẩu vị hôm nay.
             </p>
             <button
-              onClick={() => setChatOpen(true)}
+              onClick={() => onOpenChat && onOpenChat()}
               className="bg-white border border-emerald-200 hover:border-emerald-300 hover:shadow-sm text-emerald-800 text-xs font-extrabold py-2.5 px-6 rounded-2xl transition-all"
             >
               Bắt đầu Chat
@@ -414,63 +390,6 @@ export default function MealPlannerPage({ user }) {
         </div>
       </div>
 
-      {/* AI Coach Modal Chat box */}
-      {chatOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden flex flex-col h-[480px]">
-            {/* Header */}
-            <div className="bg-[#047857] text-white p-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse"></div>
-                <div>
-                  <h4 className="font-extrabold text-sm">Trò chuyện với AI Coach</h4>
-                  <p className="text-[10px] text-emerald-100 font-medium">Hỗ trợ dinh dưỡng trực tuyến</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setChatOpen(false)}
-                className="text-white/80 hover:text-white text-xs font-bold bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-full transition-colors"
-              >
-                Đóng
-              </button>
-            </div>
-
-            {/* Chat Messages */}
-            <div className="flex-1 p-4 overflow-y-auto flex flex-col gap-3.5 bg-slate-50">
-              {chatLog.map((msg, idx) => (
-                <div key={idx} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}>
-                  <div
-                    className={`max-w-[80%] rounded-2xl p-3 text-xs leading-relaxed font-semibold ${
-                      msg.sender === "user"
-                        ? "bg-[#047857] text-white rounded-tr-none"
-                        : "bg-white text-slate-700 border border-slate-100 shadow-sm rounded-tl-none"
-                    }`}
-                  >
-                    {msg.text}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Input Form */}
-            <form onSubmit={handleSendChat} className="p-3 border-t border-slate-100 flex gap-2">
-              <input
-                type="text"
-                value={chatMessage}
-                onChange={(e) => setChatMessage(e.target.value)}
-                placeholder="Nhập tin nhắn..."
-                className="flex-1 bg-slate-50 border border-slate-100 focus:border-emerald-300 outline-none text-xs font-semibold px-4 py-2.5 rounded-2xl"
-              />
-              <button
-                type="submit"
-                className="bg-[#047857] hover:bg-[#065f46] text-white px-4 py-2.5 rounded-2xl transition-all shadow-sm flex items-center justify-center shrink-0"
-              >
-                <Send className="w-3.5 h-3.5" />
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

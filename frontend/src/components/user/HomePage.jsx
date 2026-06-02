@@ -414,6 +414,7 @@ export default function HomePage({ user, onStartScan, onSelectScan }) {
       <button
         onClick={() => onStartScan && onStartScan()}
         className="fixed bottom-8 right-8 w-14 h-14 bg-[#047857] hover:bg-[#065f46] text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-40 focus:outline-none"
+        title="Quét thực phẩm"
       >
         <Camera className="w-6 h-6 stroke-[1.8]" />
       </button>

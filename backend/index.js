@@ -4,7 +4,7 @@ const cors = require("cors");
 const multer = require("multer");
 const axios = require("axios");
 const Jimp = require("jimp");
-const { analyzeFoodImage } = require("./services/geminiService");
+const { analyzeFoodImage, chatWithCoach } = require("./services/geminiService");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -122,6 +122,23 @@ app.post("/api/gateway/scan", upload.single("image"), async (req, res) => {
 
   } catch (error) {
     console.error("Error in scan endpoint:", error);
+    res.status(500).json({ error: error.message || "Internal Server Error" });
+  }
+});
+
+// Chat endpoint
+app.post("/api/gateway/chat", async (req, res) => {
+  try {
+    const { message, history } = req.body;
+    if (!message) {
+      return res.status(400).json({ error: "Message is required." });
+    }
+    
+    console.log(`Received chat message. Forwarding to Gemini AI Coach...`);
+    const reply = await chatWithCoach(message, history);
+    res.json({ success: true, reply });
+  } catch (error) {
+    console.error("Error in chat endpoint:", error);
     res.status(500).json({ error: error.message || "Internal Server Error" });
   }
 });

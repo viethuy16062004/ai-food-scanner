@@ -11,4 +11,5 @@ import java.util.Optional;
 @Repository
 public interface MealPlanRepository extends JpaRepository<MealPlan, Long> {
     Optional<MealPlan> findByUserAndPlanDate(User user, LocalDate planDate);
+    Optional<MealPlan> findFirstByUserOrderByPlanDateDesc(User user);
 }

@@ -9,10 +9,13 @@ import MealPlannerPage from "./MealPlannerPage";
 import HealthLogPage from "./HealthLogPage";
 import Header from "../../layouts/Header";
 import Footer from "../../layouts/Footer";
+import { MessageSquare } from "lucide-react";
+import AiCoachChat from "../chat/AiCoachChat";
 
 export default function UserApp({ user, onLogout }) {
   const [activeScan, setActiveScan] = useState(null);
   const [refreshHistory, setRefreshHistory] = useState(0);
+  const [chatOpen, setChatOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -57,7 +60,7 @@ export default function UserApp({ user, onLogout }) {
         <Routes>
           <Route path="/home" element={<HomePage user={user} onStartScan={handleStartScan} onSelectScan={handleSelectHistoryScan} />} />
           <Route path="/scan" element={<ScanFoodPage onScanSuccess={handleScanSuccess} onBack={() => navigate(-1)} />} />
-          <Route path="/meal-planner" element={<MealPlannerPage user={user} />} />
+          <Route path="/meal-planner" element={<MealPlannerPage user={user} onOpenChat={() => setChatOpen(true)} />} />
           <Route path="/health-log" element={<HealthLogPage user={user} />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/profile" element={<ProfilePage />} />
@@ -66,6 +69,23 @@ export default function UserApp({ user, onLogout }) {
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
       </main>
+
+      {/* FLOATING CHAT BUTTON */}
+      {!chatOpen && (
+        <button
+          onClick={() => setChatOpen(true)}
+          className={`fixed right-8 w-14 h-14 bg-emerald-600 hover:bg-[#047857] text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-40 focus:outline-none group ${
+            getCurrentPage() === "home" ? "bottom-24" : "bottom-8"
+          }`}
+          title="Trò chuyện với AI Coach"
+        >
+          <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 border-2 border-white rounded-full animate-pulse"></span>
+          <MessageSquare className="w-6 h-6 stroke-[1.8]" />
+        </button>
+      )}
+
+      {/* AI Coach Chat Modal */}
+      <AiCoachChat isOpen={chatOpen} onClose={() => setChatOpen(false)} user={user} currentPage={getCurrentPage()} />
 
       <Footer />
     </div>

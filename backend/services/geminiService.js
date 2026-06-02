@@ -149,6 +149,74 @@ async function analyzeFoodImage(imageBuffer, mimeType) {
   }
 }
 
+function getSimulatedChatReply(message) {
+  const msg = message.toLowerCase();
+  if (msg.includes("calo") || msg.includes("calori") || msg.includes("năng lượng")) {
+    return "Để điều chỉnh lượng Calo nạp vào hôm nay, bạn có thể tăng cường rau xanh và đạm lành mạnh, đồng thời giảm các món chiên xào nhiều dầu mỡ nhé.";
+  }
+  if (msg.includes("đạm") || msg.includes("protein") || msg.includes("cơ bắp")) {
+    return "Protein rất quan trọng để duy trì cơ bắp và giúp no lâu. Bạn nên bổ sung ức gà, trứng, cá hồi hoặc các loại đậu hũ trong bữa ăn nhé.";
+  }
+  if (msg.includes("nước") || msg.includes("uống")) {
+    return "Uống đủ nước giúp tăng cường trao đổi chất. Hãy duy trì thói quen uống khoảng 2 - 2.5 lít nước mỗi ngày, chia nhỏ ra uống nhé!";
+  }
+  if (msg.includes("tối") || msg.includes("sáng") || msg.includes("trưa") || msg.includes("thực đơn") || msg.includes("ăn gì")) {
+    return "Thực đơn hôm nay nên cân bằng với 1 phần tinh bột hấp thu chậm (như gạo lứt), 1 phần đạm và thật nhiều rau xanh. Bạn cần mình gợi ý món ăn cụ thể nào không?";
+  }
+  if (msg.includes("keto")) {
+    return "Chế độ Keto cắt giảm tối đa tinh bột và tăng cường chất béo tốt. Bạn nên ưu tiên bơ, trứng, thịt nạc và các loại hạt nhé.";
+  }
+  if (msg.includes("chay") || msg.includes("chay trường")) {
+    return "Ăn chay lành mạnh cần đa dạng hóa các loại nấm, đậu hũ, rau xanh và ngũ cốc nguyên hạt để đảm bảo đầy đủ vitamin và protein.";
+  }
+  if (msg.includes("mệt") || msg.includes("oải") || msg.includes("yếu")) {
+    return "Nếu cảm thấy mệt mỏi, có thể cơ thể bạn đang thiếu nước hoặc hạ đường huyết nhẹ. Hãy uống một cốc nước ấm và nghỉ ngơi một chút nhé!";
+  }
+  return "Chào bạn! Mình là AI Coach. Mình có thể giúp bạn gợi ý thực đơn lành mạnh, tính toán calo nạp vào hoặc tư vấn thói quen dinh dưỡng tốt. Bạn cần mình hỗ trợ gì hôm nay?";
+}
+
+async function chatWithCoach(message, history = []) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey.trim() === "") {
+    console.warn("GEMINI_API_KEY is empty. Using Simulated AI Chat Coach replies.");
+    return getSimulatedChatReply(message);
+  }
+
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
+      systemInstruction: "Bạn là AI Coach, một chuyên gia dinh dưỡng và huấn luyện viên sức khỏe thân thiện, chuyên nghiệp tại Việt Nam. Hãy đưa ra những lời khuyên ngắn gọn, thiết thực, khoa học và dễ hiểu bằng tiếng Việt về chế độ ăn uống, tập luyện, lượng calo, chất dinh dưỡng và các món ăn lành mạnh. Luôn trả lời ngắn gọn (dưới 4 câu) và khuyến khích người dùng duy trì lối sống lành mạnh."
+    });
+
+    // Format history for Gemini chat API: must start with 'user' and alternate roles
+    const formattedHistory = [];
+    let expectedRole = "user";
+    for (const item of (history || [])) {
+      const role = item.sender === "user" ? "user" : "model";
+      if (role === expectedRole) {
+        formattedHistory.push({
+          role,
+          parts: [{ text: item.text }]
+        });
+        expectedRole = expectedRole === "user" ? "model" : "user";
+      }
+    }
+
+    const chat = model.startChat({
+      history: formattedHistory
+    });
+
+    const result = await chat.sendMessage(message);
+    return result.response.text();
+  } catch (error) {
+    console.error("Error communicating with Gemini API for chat, falling back to simulation:", error);
+    return getSimulatedChatReply(message);
+  }
+}
+
 module.exports = {
-  analyzeFoodImage
+  analyzeFoodImage,
+  chatWithCoach
 };
+

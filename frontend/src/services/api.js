@@ -70,6 +70,13 @@ export const api = {
     }
   },
 
+  // Gateway AI Chat
+  chatWithCoach: async (message, history = []) => {
+    const headers = { ...getAuthHeader(), "Content-Type": "application/json" };
+    const res = await axios.post(`${NODE_GATEWAY_URL}/gateway/chat`, { message, history }, { headers });
+    return res.data;
+  },
+
   // Spring Boot Data (User)
   getScanHistory: async () => {
     const res = await axios.get(`${SPRINGBOOT_URL}/scans/history`, {

@@ -170,6 +170,7 @@ export default function HealthLogPage({ user }) {
   const currentFat = latestLog?.bodyFatPercent || 18.4;
   const currentWater = latestLog?.waterIntakeMl || 1800;
   const currentActive = latestLog?.activeMinutes || 30;
+  const currentCalories = latestLog?.avgCalories || 1950;
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10">
@@ -237,7 +238,7 @@ export default function HealthLogPage({ user }) {
         <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Calo Trung bình</span>
           <div className="flex items-baseline mt-2">
-            <span className="text-3xl font-extrabold text-[#047857]">1,950</span>
+            <span className="text-3xl font-extrabold text-[#047857]">{Math.round(currentCalories).toLocaleString()}</span>
             <span className="text-xs text-slate-500 ml-0.5 font-bold">kcal</span>
           </div>
           <span className="inline-block mt-3 text-[10px] font-extrabold text-red-700 bg-red-50 px-2 py-0.5 rounded-full border border-red-100">

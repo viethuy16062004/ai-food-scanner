@@ -3,8 +3,10 @@ package com.example.aifoodscanner.service;
 import com.example.aifoodscanner.entity.MealPlan;
 import com.example.aifoodscanner.entity.MealPlanItem;
 import com.example.aifoodscanner.entity.User;
+import com.example.aifoodscanner.entity.HealthLog;
 import com.example.aifoodscanner.repository.MealPlanItemRepository;
 import com.example.aifoodscanner.repository.MealPlanRepository;
+import com.example.aifoodscanner.repository.HealthLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,7 @@ public class MealPlanService {
 
     private final MealPlanRepository mealPlanRepository;
     private final MealPlanItemRepository mealPlanItemRepository;
+    private final HealthLogRepository healthLogRepository;
 
     // Helper map of recipes for different diets to mock high-quality AI recommendations
     private static final Map<String, List<Map<String, Object>>> RECIPES = new HashMap<>();
@@ -82,7 +85,12 @@ public class MealPlanService {
         if (existing.isPresent()) {
             return existing.get();
         }
-        return generateNewMealPlan(user, "Tăng cơ");
+        
+        String goal = mealPlanRepository.findFirstByUserOrderByPlanDateDesc(user)
+                .map(MealPlan::getDietaryGoal)
+                .orElse("Tăng cơ");
+                
+        return generateNewMealPlan(user, goal);
     }
 
     @Transactional
@@ -92,27 +100,85 @@ public class MealPlanService {
         // Remove existing plan for today if any
         mealPlanRepository.findByUserAndPlanDate(user, today).ifPresent(mealPlanRepository::delete);
 
-        double calories = 2250.0;
-        double protein = 160.0;
-        double carbs = 220.0;
-        double fat = 65.0;
+        // Fetch latest HealthLog data
+        List<HealthLog> logs = healthLogRepository.findByUserOrderByLogDateDesc(user);
+        HealthLog latestLog = logs.isEmpty() ? null : logs.get(0);
+
+        // Default calculations using weight and calorie expenditure formulas
+        double calories = 2000.0;
+        double weight = 70.0; // default fallback weight
+
+        if (latestLog != null) {
+            if (latestLog.getWeight() != null && latestLog.getWeight() > 0) {
+                weight = latestLog.getWeight();
+            }
+            if (latestLog.getAvgCalories() != null && latestLog.getAvgCalories() > 0) {
+                calories = latestLog.getAvgCalories();
+            } else {
+                // Calculate BMR: Weight (kg) * 22
+                double bmr = weight * 22;
+                // Calculate TDEE: based on activeMinutes
+                double activityFactor = 1.25;
+                if (latestLog.getActiveMinutes() != null) {
+                    if (latestLog.getActiveMinutes() >= 60) {
+                        activityFactor = 1.5;
+                    } else if (latestLog.getActiveMinutes() >= 30) {
+                        activityFactor = 1.35;
+                    }
+                }
+                calories = bmr * activityFactor;
+            }
+        } else {
+            // Fallback base calories using weight * 22 * 1.3
+            calories = weight * 22 * 1.3;
+        }
+
+        // Adjust based on the dietaryGoal
+        if ("Keto".equalsIgnoreCase(goal)) {
+            calories = calories - 300; // deficit for keto
+        } else if ("Thuần chay".equalsIgnoreCase(goal)) {
+            // maintenance
+        } else if ("Low Carb".equalsIgnoreCase(goal)) {
+            calories = calories - 200; // mild deficit for fat loss
+        } else if ("Tăng cơ".equalsIgnoreCase(goal)) {
+            calories = calories + 400; // calorie surplus for muscle gain
+        }
+
+        // Round calories to nearest 50
+        calories = Math.round(calories / 50.0) * 50.0;
+        calories = Math.max(1200.0, Math.min(4000.0, calories));
+
+        // Compute macros based on goal ratios
+        double protein = 0.0;
+        double carbs = 0.0;
+        double fat = 0.0;
 
         if ("Keto".equalsIgnoreCase(goal)) {
-            calories = 2000.0;
-            protein = 120.0;
-            carbs = 30.0;
-            fat = 150.0;
+            // Keto: 70% Fat, 25% Protein, 5% Carbs
+            protein = (calories * 0.25) / 4.0;
+            carbs = (calories * 0.05) / 4.0;
+            fat = (calories * 0.70) / 9.0;
         } else if ("Thuần chay".equalsIgnoreCase(goal)) {
-            calories = 1900.0;
-            protein = 75.0;
-            carbs = 280.0;
-            fat = 50.0;
+            // Vegan: 20% Protein, 60% Carbs, 20% Fat
+            protein = (calories * 0.20) / 4.0;
+            carbs = (calories * 0.60) / 4.0;
+            fat = (calories * 0.20) / 9.0;
         } else if ("Low Carb".equalsIgnoreCase(goal)) {
-            calories = 1800.0;
-            protein = 140.0;
-            carbs = 80.0;
-            fat = 100.0;
+            // Low Carb: 35% Protein, 20% Carbs, 45% Fat
+            protein = (calories * 0.35) / 4.0;
+            carbs = (calories * 0.20) / 4.0;
+            fat = (calories * 0.45) / 9.0;
+        } else {
+            // Tăng cơ / Balanced: 30% Protein, 50% Carbs, 20% Fat
+            protein = (calories * 0.30) / 4.0;
+            carbs = (calories * 0.50) / 4.0;
+            fat = (calories * 0.20) / 9.0;
         }
+
+        // Round macros to 1 decimal place
+        protein = Math.round(protein * 10.0) / 10.0;
+        carbs = Math.round(carbs * 10.0) / 10.0;
+        fat = Math.round(fat * 10.0) / 10.0;
 
         MealPlan plan = MealPlan.builder()
                 .user(user)
@@ -127,14 +193,24 @@ public class MealPlanService {
         MealPlan savedPlan = mealPlanRepository.save(plan);
         List<MealPlanItem> items = new ArrayList<>();
 
+        // Retrieve static recipe list and scale it dynamically to fit the custom calorie target
         List<Map<String, Object>> recipes = RECIPES.getOrDefault(goal, RECIPES.get("Tăng cơ"));
+        double totalRecipeCalories = recipes.stream().mapToDouble(r -> (Double) r.get("cals")).sum();
+        double totalRecipeProtein = recipes.stream().mapToDouble(r -> (Double) r.get("prot")).sum();
+
+        double calorieScale = calories / totalRecipeCalories;
+        double proteinScale = protein / totalRecipeProtein;
+
         for (Map<String, Object> r : recipes) {
+            double rawCals = (Double) r.get("cals");
+            double rawProt = (Double) r.get("prot");
+
             MealPlanItem item = MealPlanItem.builder()
                     .mealPlan(savedPlan)
                     .mealType((String) r.get("type"))
                     .foodName((String) r.get("name"))
-                    .calories((Double) r.get("cals"))
-                    .protein((Double) r.get("prot"))
+                    .calories(Math.round(rawCals * calorieScale * 10.0) / 10.0)
+                    .protein(Math.round(rawProt * proteinScale * 10.0) / 10.0)
                     .imageUrl((String) r.get("imgUrl"))
                     .build();
             items.add(mealPlanItemRepository.save(item));
