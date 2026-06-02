@@ -43,48 +43,47 @@ Dự án đã được tái cấu trúc toàn diện sang **Spring Boot 3** (LTS
 
 ## 📂 Cấu Trúc Dự Án
 ```text
-ai-nutrition-scanner/
-├── backend/                  # Java Spring Boot 3 Backend Service
-│   ├── src/main/java/        # Mã nguồn Java (Controller, Service, Repository, DTO, Model)
-│   ├── src/main/resources/   # Cấu hình application.yml và Flyway Migrations
-│   ├── pom.xml               # Quản lý thư viện Maven
-│   └── Dockerfile            # Dockerfile đa tầng tối ưu hóa JRE 21 gọn nhẹ
-├── frontend-web/             # Next.js 15 Web Application & Admin Dashboard
-│   ├── src/app/              # Next.js pages (scan, dashboard, history, login...)
-│   └── src/services/store.ts # Zustand Store liên kết APIs
-├── frontend-mobile/          # Flutter Mobile Application
-├── docker-compose.yml        # Môi trường chạy Docker cục bộ liên thông (App - Web - DB)
-├── railway.json              # Cấu hình tự động deploy Railway Cloud
+ai-food-scanner/
+├── backend/                  # API Backend Services
+│   ├── index.js              # Node.js Gateway (Xử lý Gemini AI)
+│   ├── src/main/java/        # Spring Boot Core API (Xử lý Data, Auth)
+│   ├── Dockerfile.node       # Dockerfile cho Node.js Gateway
+│   └── Dockerfile.spring     # Dockerfile đa tầng cho Spring Boot
+├── frontend/                 # React + Vite Web Application
+│   ├── src/                  # Mã nguồn React
+│   ├── .env                  # Biến môi trường kết nối API
+│   ├── nginx.conf            # Cấu hình Nginx
+│   └── Dockerfile            # Dockerfile đa tầng (Build Vite, Serve Nginx)
+├── docker-compose.yml        # Chạy toàn bộ hệ thống (App - API - DB)
 └── README.md                 # Tài liệu hướng dẫn sử dụng
 ```
 
 ---
 
-## 🚀 Hướng Dẫn Khởi Chạy Nhanh (Cục Bộ - Local)
+## 🚀 Hướng Dẫn Khởi Chạy Nhanh (Bằng Docker)
 
 ### Yêu cầu hệ thống:
 - Đã cài đặt [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/).
-- Có khóa API Google Gemini hoặc OpenAI (không bắt buộc, hệ thống tự động fallback sang bộ mock data thông minh phục vụ demo cực kỳ hoàn hảo).
+- Có khóa API Google Gemini.
 
 ### Bước 1: Thiết lập biến môi trường
-Tạo tệp `.env` tại thư mục gốc của dự án hoặc khai báo các biến môi trường sau:
+Tạo tệp `.env` trong thư mục `docker-compose.yml` (hoặc cấu hình trực tiếp) với biến:
 ```env
-GEMINI_API_KEY=khoa_api_gemini_cua_ban_neu_co
-JWT_SECRET=supersecretjwtkey2026nutritionscanner
+GEMINI_API_KEY=khoa_api_gemini_cua_ban
 ```
 
 ### Bước 2: Chạy toàn bộ ứng dụng bằng Docker Compose
 Mở terminal tại thư mục gốc và chạy lệnh duy nhất:
 ```bash
-docker-compose up --build
+docker-compose up -d --build
 ```
-Hệ thống sẽ tự động tải các base image, biên dịch mã nguồn Java Spring Boot, tải thư viện Next.js, tạo cấu trúc cơ sở dữ liệu PostgreSQL qua Flyway và liên kết mạng.
+Hệ thống sẽ tự động build frontend, backend Node.js, backend Spring Boot, tạo cơ sở dữ liệu MySQL và liên kết mạng giữa các container.
 
 ### Địa chỉ truy cập dịch vụ:
-- **Next.js Web App**: [http://localhost:3000](http://localhost:3000)
-- **Spring Boot API Backend**: [http://localhost:8000](http://localhost:8000)
-- **Tài liệu API Swagger UI**: [http://localhost:8000/swagger-ui/index.html](http://localhost:8000/swagger-ui/index.html)
-- **PostgreSQL Database**: `localhost:5432`
+- **Frontend Web App**: [http://localhost:5173](http://localhost:5173)
+- **Node.js Gateway API**: [http://localhost:5000](http://localhost:5000)
+- **Spring Boot Core API**: [http://localhost:8080](http://localhost:8080)
+- **MySQL Database**: `localhost:3306`
 
 ---
 
