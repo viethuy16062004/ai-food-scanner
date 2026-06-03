@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const NODE_GATEWAY_URL = "http://localhost:5000/api";
-const SPRINGBOOT_URL = "http://localhost:8080/api";
+const NODE_GATEWAY_URL = import.meta.env.VITE_NODE_GATEWAY_URL || "http://localhost:5000/api";
+const SPRINGBOOT_URL = import.meta.env.VITE_SPRINGBOOT_URL || "http://localhost:8080/api";
 
 // Helper to get auth header
 const getAuthHeader = () => {

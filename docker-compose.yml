@@ -1,0 +1,59 @@
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: '0000'
+      MYSQL_DATABASE: 'ai_food_scanner'
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend-spring:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.spring
+    container_name: backend-spring
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/ai_food_scanner?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=0000
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+
+  backend-node:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.node
+    container_name: backend-node
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - SPRINGBOOT_URL=http://backend-spring:8080
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-YOUR_GEMINI_API_KEY_HERE}
+    depends_on:
+      - backend-spring
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend-node
+      - backend-spring
+
+volumes:
+  mysql-data:
