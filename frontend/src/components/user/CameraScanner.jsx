@@ -135,7 +135,7 @@ export default function CameraScanner({ onScanSuccess }) {
             <p className="text-emerald-400 font-bold tracking-wide animate-pulse">
               ĐANG PHÂN TÍCH DINH DƯỠNG...
             </p>
-            <p className="text-slate-400 text-xs mt-2">Gemini 1.5 Flash đang quét thực phẩm</p>
+            <p className="text-slate-400 text-xs mt-2">Gemini AI đang quét thực phẩm</p>
           </div>
         )}
       </div>

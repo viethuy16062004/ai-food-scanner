@@ -25,13 +25,14 @@ async function optimizeImage(buffer) {
   try {
     const image = await Jimp.read(buffer);
     
-    // Resize to width of 800px if larger, maintaining aspect ratio
-    if (image.bitmap.width > 800) {
-      image.resize(800, Jimp.AUTO);
+    // Resize to width of 1280px if larger, maintaining aspect ratio
+    // Higher resolution needed for reading text on food packaging labels
+    if (image.bitmap.width > 1280) {
+      image.resize(1280, Jimp.AUTO);
     }
     
-    // Compress quality to 75%
-    image.quality(75);
+    // Compress quality to 85% (higher quality for label readability)
+    image.quality(85);
     
     // Convert back to jpeg buffer
     return await image.getBufferAsync(Jimp.MIME_JPEG);
@@ -86,12 +87,13 @@ app.post("/api/gateway/scan", upload.single("image"), async (req, res) => {
     // If it is food and the request has Authorization header (JWT), forward to Spring Boot backend
     const authHeader = req.headers["authorization"];
     let savedToHistory = false;
+    let scanLog = null;
 
     if (analysis.isFood && authHeader) {
       try {
         console.log("Forwarding scan log to Spring Boot backend...");
         const base64Image = "data:image/jpeg;base64," + optimizedBuffer.toString("base64");
-        await axios.post(`${SPRINGBOOT_URL}/api/scans`, {
+        const response = await axios.post(`${SPRINGBOOT_URL}/api/scans`, {
           foodName: analysis.foodName,
           calories: analysis.calories,
           protein: analysis.protein,
@@ -107,6 +109,7 @@ app.post("/api/gateway/scan", upload.single("image"), async (req, res) => {
           }
         });
         savedToHistory = true;
+        scanLog = response.data;
         console.log("Successfully logged scan history to Spring Boot.");
       } catch (springError) {
         console.error("Failed to save to Spring Boot backend:", springError.response?.data || springError.message);
@@ -117,7 +120,8 @@ app.post("/api/gateway/scan", upload.single("image"), async (req, res) => {
     res.json({
       success: true,
       analysis,
-      savedToHistory
+      savedToHistory,
+      scanLog
     });
 
   } catch (error) {

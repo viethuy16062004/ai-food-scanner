@@ -96,6 +96,89 @@ function getSimulatedAnalysis(imageBuffer) {
   return mockFoods[randomIndex];
 }
 
+// Shared prompt for food analysis - optimized for both fresh food and packaged food/snacks
+const FOOD_ANALYSIS_PROMPT = `
+    Bạn là chuyên gia dinh dưỡng AI hàng đầu, có khả năng nhận diện MỌI loại thực phẩm bao gồm:
+    - Thực phẩm tươi sống, món ăn chế biến sẵn, bữa ăn trên đĩa/bát
+    - **THỰC PHẨM ĐÓNG GÓI / BAO BÌ**: bim bim, snack, bánh kẹo, mì gói, nước ngọt, nước trái cây đóng hộp, sữa hộp, thực phẩm đóng hộp, v.v.
+    - Đồ uống: trà sữa, cà phê, nước ngọt, sinh tố, nước ép, bia, rượu, v.v.
+
+    ## HƯỚNG DẪN QUAN TRỌNG CHO THỰC PHẨM ĐÓNG GÓI (BAO BÌ):
+    Nếu ảnh chứa thực phẩm/đồ uống/snack CÓ BAO BÌ (gói, hộp, chai, lon, túi):
+    1. **ĐỌC TÊN SẢN PHẨM** trên bao bì: đọc kỹ tên thương hiệu (brand) và tên sản phẩm in trên bao bì. Ví dụ: "Lay's Stax Khoai Tây Chiên Vị Tự Nhiên", "Oishi Snack Tôm", "Coca-Cola", "Pepsi", "Mì Hảo Hảo", v.v.
+    2. **ĐỌC BẢNG THÀNH PHẦN DINH DƯỠNG** (Nutrition Facts) nếu thấy trên bao bì: lấy số liệu calories, protein, carbs, fat trực tiếp từ nhãn thay vì ước lượng.
+    3. **ĐỌC DANH SÁCH NGUYÊN LIỆU** (Ingredients) nếu thấy trên bao bì để xác định allergens và warnings chính xác.
+    4. **TÊN SẢN PHẨM (foodName)** phải bao gồm TÊN THƯƠNG HIỆU + TÊN SẢN PHẨM. Ví dụ: "Lay's Khoai Tây Chiên Vị Tự Nhiên", KHÔNG được ghi chung chung là "Bim bim" hay "Snack khoai tây".
+    5. Nếu không đọc được rõ nhãn, hãy nhận diện dựa trên hình dáng bao bì, màu sắc, logo thương hiệu quen thuộc.
+
+    ## HƯỚNG DẪN CHO MÓN ĂN / THỰC PHẨM KHÔNG CÓ BAO BÌ:
+    - Nhận diện tên món ăn bằng tiếng Việt
+    - Ước lượng khẩu phần tiêu chuẩn (1 serving)
+    - Đánh giá dựa trên nguyên liệu nhìn thấy trong ảnh
+
+    ## YÊU CẦU ĐẦU RA:
+    Trả về JSON theo đúng schema sau:
+    {
+      "isFood": true, // false nếu ảnh KHÔNG chứa bất kỳ thực phẩm hoặc đồ uống nào
+      "foodName": "String - Tên đầy đủ CÓ thương hiệu nếu là hàng đóng gói (VD: 'Oishi Snack Tôm Cay'), tên món ăn nếu là thức ăn tươi (VD: 'Phở Bò Tái Nạm')",
+      "calories": number (kcal cho 1 khẩu phần/gói, lấy từ nhãn nếu có),
+      "protein": number (gram),
+      "carbs": number (gram),
+      "fat": number (gram),
+      "healthyScore": number (0-100, 0=cực kỳ không lành mạnh, 100=cực kỳ tốt cho sức khỏe),
+      "summary": "String - Mô tả chi tiết sản phẩm/món ăn bằng tiếng Việt. Nếu là hàng đóng gói, nêu rõ thương hiệu, loại sản phẩm, đặc điểm nổi bật.",
+      "warnings": ["String - Các cảnh báo sức khỏe: đường cao, natri cao, chất bảo quản, phẩm màu nhân tạo, chất béo trans, v.v. bằng tiếng Việt"],
+      "allergens": ["String - Các chất gây dị ứng: đậu phộng, gluten, sữa, đậu nành, tôm, cua, trứng, v.v. bằng tiếng Việt"],
+      "benefits": ["String - Các lợi ích sức khỏe nếu có, bằng tiếng Việt"]
+    }
+    
+    Nếu isFood = false, set các trường khác thành rỗng/null, giải thích trong summary.
+    
+    **LƯU Ý QUAN TRỌNG**: 
+    - Mọi thực phẩm có bao bì (bim bim, snack, bánh, kẹo, nước ngọt, mì gói...) đều là thực phẩm hợp lệ → isFood = true
+    - PHẢI trả về foodName có tên thương hiệu cụ thể nếu nhìn thấy trên bao bì
+    - Toàn bộ nội dung text phải bằng tiếng Việt
+  `;
+
+// Helper: call Gemini with a specific model, with retry for rate limits
+async function callGeminiVision(genAI, modelName, imageBuffer, mimeType, maxRetries = 3) {
+  const model = genAI.getGenerativeModel({
+    model: modelName,
+    generationConfig: {
+      responseMimeType: "application/json"
+    }
+  });
+
+  const imagePart = bufferToGenerativePart(imageBuffer, mimeType);
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`[Attempt ${attempt}/${maxRetries}] Calling ${modelName}...`);
+      const result = await model.generateContent([FOOD_ANALYSIS_PROMPT, imagePart]);
+      const responseText = result.response.text();
+      const jsonResult = JSON.parse(responseText);
+      console.log(`[${modelName}] Success! Food identified: ${jsonResult.foodName || 'N/A'}`);
+      return jsonResult;
+    } catch (error) {
+      const status = error.status || error.statusCode;
+      const isRateLimit = status === 429;
+      const isServerError = status >= 500;
+      const isRetryable = isRateLimit || isServerError || error.message?.includes('fetch failed');
+
+      console.warn(`[${modelName}] Attempt ${attempt} failed: ${status || error.message}`);
+
+      if (isRetryable && attempt < maxRetries) {
+        // Exponential backoff: 2s, 4s, 8s...
+        const waitMs = Math.pow(2, attempt) * 1000;
+        console.log(`Retrying in ${waitMs / 1000}s...`);
+        await new Promise(resolve => setTimeout(resolve, waitMs));
+      } else {
+        throw error; // Non-retryable or last attempt
+      }
+    }
+  }
+}
+
 async function analyzeFoodImage(imageBuffer, mimeType) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey || apiKey.trim() === "") {
@@ -104,49 +187,25 @@ async function analyzeFoodImage(imageBuffer, mimeType) {
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
-    generationConfig: {
-      responseMimeType: "application/json"
-    }
-  });
 
-  const prompt = `
-    Analyze this image containing food, snack, or meal. 
-    You must identify the food item, estimate its nutritional value per typical serving size, and evaluate its healthiness.
-    
-    Return a JSON response conforming strictly to this schema:
-    {
-      "isFood": true, // set to false if the image does not contain any recognizable food or beverage
-      "foodName": "String (Name of the food in Vietnamese)",
-      "calories": number (in kcal, e.g., 250),
-      "protein": number (in grams, e.g., 8.5),
-      "carbs": number (in grams, e.g., 35.0),
-      "fat": number (in grams, e.g., 6.2),
-      "healthyScore": number (0 to 100, where 0 is extremely unhealthy/processed and 100 is extremely fresh/nutritious),
-      "summary": "String (Detailed description of the food, ingredients, and nutrition overview in Vietnamese)",
-      "warnings": ["String (List of potential issues like high sugar, high sodium, harmful preservatives, artificial colorings, etc. in Vietnamese)"],
-      "allergens": ["String (List of common allergens present like peanut, gluten, milk, soy, etc. in Vietnamese)"],
-      "benefits": ["String (List of healthy aspects like rich in fiber, vitamin C source, good fats, etc. in Vietnamese)"]
-    }
-    
-    If isFood is false, you can set other fields to empty or null, but explain why in the 'summary' field (e.g. "Ảnh không chứa thực phẩm hoặc đồ uống có thể nhận diện.").
-    
-    Ensure all text fields (foodName, summary, warnings, allergens, benefits) are returned in Vietnamese.
-  `;
+  // Strategy: Try Flash first (fast, reliable, high rate limit), fallback to Pro if needed
+  const models = ["gemini-2.5-flash", "gemini-2.5-pro"];
 
-  try {
-    const imagePart = bufferToGenerativePart(imageBuffer, mimeType);
-    const result = await model.generateContent([prompt, imagePart]);
-    const responseText = result.response.text();
-    
-    // Parse response text to JSON
-    const jsonResult = JSON.parse(responseText);
-    return jsonResult;
-  } catch (error) {
-    console.error("Error communicating with Gemini API, falling back to simulated scan:", error);
-    return getSimulatedAnalysis(imageBuffer);
+  for (const modelName of models) {
+    try {
+      const result = await callGeminiVision(genAI, modelName, imageBuffer, mimeType);
+      return result;
+    } catch (error) {
+      console.error(`[${modelName}] All retries exhausted: ${error.status || error.message}`);
+      if (modelName !== models[models.length - 1]) {
+        console.log(`Falling back to next model...`);
+      }
+    }
   }
+
+  // All models failed - use simulated data as last resort
+  console.error("All Gemini models failed. Falling back to simulated scan.");
+  return getSimulatedAnalysis(imageBuffer);
 }
 
 function getSimulatedChatReply(message) {
