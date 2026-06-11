@@ -14,7 +14,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/health-logs")
 @RequiredArgsConstructor
-@CrossOrigin
 public class HealthLogController {
 
     private final HealthLogService healthLogService;

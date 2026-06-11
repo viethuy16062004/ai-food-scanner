@@ -15,7 +15,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/scans")
 @RequiredArgsConstructor
-@CrossOrigin
 public class ScanController {
 
     private final ScanHistoryService scanHistoryService;

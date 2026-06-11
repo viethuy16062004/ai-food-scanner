@@ -14,7 +14,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/shopping-list")
 @RequiredArgsConstructor
-@CrossOrigin
 public class ShoppingListController {
 
     private final ShoppingListService shoppingListService;
