@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const NODE_GATEWAY_URL = import.meta.env.VITE_NODE_GATEWAY_URL || "https://ai-food-scanner-node.onrender.com/api";
+const NODE_GATEWAY_URL = import.meta.env.VITE_NODE_GATEWAY_URL || "https://ai-food-scanner-node123.onrender.com/api";
 const SPRINGBOOT_URL = import.meta.env.VITE_SPRINGBOOT_URL || "https://ai-food-scanner.onrender.com/api";
 
 // Helper to get auth header
