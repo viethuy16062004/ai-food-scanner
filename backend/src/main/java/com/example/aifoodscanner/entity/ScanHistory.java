@@ -44,7 +44,7 @@ public class ScanHistory {
     private String rawJsonResult;
 
     @Lob
-    @Column(name = "image_url", columnDefinition = "TEXT")
+    @Column(name = "image_url", length = 16777216)
     private String imageUrl;
 
     @Column(name = "created_at", nullable = false)
