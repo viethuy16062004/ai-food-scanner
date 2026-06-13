@@ -14,7 +14,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/meal-plans")
 @RequiredArgsConstructor
-@CrossOrigin
 public class MealPlanController {
 
     private final MealPlanService mealPlanService;
