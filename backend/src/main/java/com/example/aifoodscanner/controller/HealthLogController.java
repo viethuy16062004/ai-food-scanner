@@ -46,8 +46,9 @@ public class HealthLogController {
             Double fatPercent = request.get("bodyFatPercent") != null ? Double.valueOf(request.get("bodyFatPercent").toString()) : null;
             Double water = request.get("waterIntakeMl") != null ? Double.valueOf(request.get("waterIntakeMl").toString()) : null;
             Double active = request.get("activeMinutes") != null ? Double.valueOf(request.get("activeMinutes").toString()) : null;
+            Double bmi = request.get("bmi") != null ? Double.valueOf(request.get("bmi").toString()) : null;
             
-            HealthLog log = healthLogService.saveTodayLog(user, weight, fatPercent, water, active);
+            HealthLog log = healthLogService.saveTodayLog(user, weight, fatPercent, water, active, bmi);
             return ResponseEntity.ok(log);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

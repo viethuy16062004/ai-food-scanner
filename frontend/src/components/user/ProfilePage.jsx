@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { api } from "../../services/api";
 import {
   User, Shield, Globe, Trash2, ChevronRight, Lock, Wheat, Egg, Fish, Leaf, Sparkles
@@ -9,10 +9,69 @@ export default function ProfilePage() {
   const userName = user?.fullName || user?.username || "Người dùng";
   const userEmail = user?.email || "email@example.com";
 
-  const [height, setHeight] = useState("164");
-  const [weight, setWeight] = useState("54.5");
+  const [height, setHeight] = useState(() => {
+    return localStorage.getItem(`height_${user?.username}`) || "170";
+  });
+  const [weight, setWeight] = useState(() => {
+    return localStorage.getItem(`weight_${user?.username}`) || "65";
+  });
   const [birthDate, setBirthDate] = useState("1998-05-15");
   const [goal, setGoal] = useState("maintain");
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
+  useEffect(() => {
+    const fetchLatestMetrics = async () => {
+      try {
+        const latestLog = await api.getLatestHealthLog();
+        if (latestLog && latestLog.weight) {
+          setWeight(latestLog.weight.toString());
+        }
+      } catch (err) {
+        console.error("Failed to fetch latest health metrics:", err);
+      }
+    };
+    fetchLatestMetrics();
+  }, [user?.username]);
+
+  const handleSaveChanges = async () => {
+    setSaveError("");
+    setSaveSuccess(false);
+
+    if (!height || !weight) {
+      setSaveError("Vui lòng nhập đầy đủ chiều cao và cân nặng!");
+      return;
+    }
+
+    const hVal = parseFloat(height);
+    const wVal = parseFloat(weight);
+
+    if (isNaN(hVal) || hVal < 100 || hVal > 250) {
+      setSaveError("Chiều cao hợp lệ phải nằm trong khoảng từ 100cm đến 250cm.");
+      return;
+    }
+    if (isNaN(wVal) || wVal < 30 || wVal > 300) {
+      setSaveError("Cân nặng hợp lệ phải nằm trong khoảng từ 30kg đến 300kg.");
+      return;
+    }
+
+    try {
+      localStorage.setItem(`height_${user?.username}`, height);
+      localStorage.setItem(`weight_${user?.username}`, weight);
+      
+      const calculatedBmi = Math.round((wVal / ((hVal / 100) ** 2)) * 10) / 10;
+      await api.saveTodayHealthLog({
+        weight: wVal,
+        bmi: calculatedBmi
+      });
+
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err) {
+      console.error("Failed to save profile changes:", err);
+      setSaveError("Không thể lưu thay đổi vào cơ sở dữ liệu. Vui lòng kiểm tra kết nối.");
+    }
+  };
 
   // Diet & Allergy toggles
   const [allergies, setAllergies] = useState({
@@ -39,7 +98,7 @@ export default function ProfilePage() {
             <div className="w-28 h-28 mx-auto rounded-full bg-gradient-to-br from-teal-100 to-emerald-100 flex items-center justify-center mb-4 relative">
               <span className="text-4xl font-extrabold text-teal-700">
                 {userName.charAt(0).toUpperCase()}
-              </span>
+               </span>
               <div className="absolute bottom-1 right-1 w-7 h-7 bg-teal-600 rounded-full flex items-center justify-center border-2 border-white">
                 <User className="w-3.5 h-3.5 text-white" />
               </div>
@@ -101,6 +160,7 @@ export default function ProfilePage() {
                 <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Chiều cao (cm)</label>
                 <input
                   type="number"
+                  step="any"
                   value={height}
                   onChange={(e) => setHeight(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-sm text-gray-800 focus:outline-none focus:border-teal-500 transition-all"
@@ -110,6 +170,7 @@ export default function ProfilePage() {
                 <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Cân nặng (kg)</label>
                 <input
                   type="number"
+                  step="any"
                   value={weight}
                   onChange={(e) => setWeight(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-sm text-gray-800 focus:outline-none focus:border-teal-500 transition-all"
@@ -138,9 +199,21 @@ export default function ProfilePage() {
                 </select>
               </div>
             </div>
-
-            <div className="flex justify-end mt-6">
-              <button className="bg-[#065f46] hover:bg-[#064e3b] text-white font-bold py-2.5 px-6 rounded-xl shadow-sm transition-colors text-sm">
+            <div className="flex justify-end items-center gap-4 mt-6">
+              {saveSuccess && (
+                <span className="text-xs font-bold text-emerald-600 animate-pulse">
+                  ✓ Đã lưu thay đổi thành công!
+                </span>
+              )}
+              {saveError && (
+                <span className="text-xs font-bold text-red-600">
+                  ⚠️ {saveError}
+                </span>
+              )}
+              <button
+                onClick={handleSaveChanges}
+                className="w-full sm:w-auto bg-[#065f46] hover:bg-[#064e3b] text-white font-bold py-3 px-6 rounded-xl shadow-sm transition-colors text-sm min-h-[44px]"
+              >
                 Lưu thay đổi
               </button>
             </div>

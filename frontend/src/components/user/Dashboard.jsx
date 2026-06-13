@@ -111,9 +111,8 @@ export default function Dashboard({ scanResult, onClearScan }) {
                   ></div>
                 </div>
               </div>
-
               {/* Nutrition macros detail table */}
-              <div className="grid grid-cols-4 gap-3 mt-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">
                 <div className="glass-card p-3 rounded-xl flex flex-col items-center">
                   <span className="text-xs text-slate-400 font-semibold mb-1">Năng lượng</span>
                   <span className="text-lg font-extrabold text-orange-400">{scanResult.calories}</span>
@@ -272,7 +271,7 @@ export default function Dashboard({ scanResult, onClearScan }) {
               <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Hàm lượng dinh dưỡng đã nạp hôm nay</h3>
             </div>
 
-            <div className="grid grid-cols-3 gap-6 mt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-2">
               {/* Carbs Progress */}
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between text-xs font-semibold text-slate-400">

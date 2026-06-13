@@ -38,7 +38,11 @@ export default function ScanFoodPage({ onScanSuccess, onBack }) {
           setDetectedFood(null);
         } else {
           setDetectedFood(`Đã nhận diện: ${result.analysis.foodName}`);
-          setScanResult(result.analysis);
+          setScanResult({
+            ...result.analysis,
+            imageUrl: imageSrc,
+            savedToHistory: result.savedToHistory
+          });
         }
       } else {
         throw new Error("Kết quả trả về không hợp lệ.");
@@ -76,7 +80,11 @@ export default function ScanFoodPage({ onScanSuccess, onBack }) {
               setDetectedFood(null);
             } else {
               setDetectedFood(`Đã nhận diện: ${result.analysis.foodName}`);
-              setScanResult(result.analysis);
+              setScanResult({
+                ...result.analysis,
+                imageUrl: imageSrc,
+                savedToHistory: result.savedToHistory
+              });
             }
           } else {
             throw new Error("Kết quả trả về không hợp lệ.");
@@ -120,7 +128,7 @@ export default function ScanFoodPage({ onScanSuccess, onBack }) {
 
   return (
     <div className="min-h-screen bg-[#f8fafc] py-8">
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* LEFT SIDE - Camera Scanner */}
           <div className="lg:col-span-3">
@@ -258,14 +266,14 @@ export default function ScanFoodPage({ onScanSuccess, onBack }) {
             )}
 
             {/* Upload Area */}
-            <div className="border-2 border-dashed border-slate-300/80 rounded-3xl p-10 text-center bg-white shadow-sm hover:border-emerald-500 transition-all duration-300">
+            <div className="border-2 border-dashed border-slate-300/80 rounded-3xl p-6 sm:p-10 text-center bg-white shadow-sm hover:border-emerald-500 transition-all duration-300">
               <Upload className="w-12 h-12 text-[#047857] mx-auto mb-4" />
               <h3 className="text-lg font-bold text-slate-800 mb-1">Tải ảnh thực phẩm lên</h3>
               <p className="text-slate-400 text-xs mb-6 font-medium">Hỗ trợ JPG, PNG (Tối đa 10MB)</p>
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={loading}
-                className="bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-bold py-2.5 px-6 rounded-2xl transition-colors disabled:opacity-50 text-sm focus:outline-none"
+                className="bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-bold py-3 px-6 rounded-2xl transition-colors disabled:opacity-50 text-sm focus:outline-none min-h-[44px]"
               >
                 Chọn từ thiết bị
               </button>
@@ -306,7 +314,7 @@ export default function ScanFoodPage({ onScanSuccess, onBack }) {
                 </div>
 
                 {/* Nutrient Summary Grid */}
-                <div className="grid grid-cols-4 gap-2 bg-slate-50 p-4 rounded-2xl mb-4 text-center border border-slate-100/50">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-50 p-4 rounded-2xl mb-4 text-center border border-slate-100/50">
                   <div>
                     <span className="block text-sm font-extrabold text-slate-800">{Math.round(scanResult.calories)}</span>
                     <span className="text-[9px] font-bold text-slate-400 uppercase">Kcal</span>

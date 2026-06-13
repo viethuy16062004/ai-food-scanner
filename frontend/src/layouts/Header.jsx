@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, User, Bell } from "lucide-react";
+import { LogOut, User, Bell, Menu, X } from "lucide-react";
 
 export default function Header({ user, onLogout, onNavigate, currentPage }) {
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleNav = (page) => {
     if (onNavigate) {
@@ -16,12 +17,22 @@ export default function Header({ user, onLogout, onNavigate, currentPage }) {
 
   return (
     <header className="bg-white sticky top-0 z-40 border-b border-slate-100 shadow-sm">
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-        {/* LOGO */}
-        <div className="flex items-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        {/* LOGO & MOBILE TOGGLE */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 -ml-2 rounded-lg text-slate-500 hover:bg-slate-100 focus:outline-none"
+            aria-label="Toggle Menu"
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
           <span 
             className="text-xl font-bold text-emerald-800 tracking-tight cursor-pointer hover:opacity-90 transition-opacity" 
-            onClick={() => handleNav("home")}
+            onClick={() => {
+              handleNav("home");
+              setMobileMenuOpen(false);
+            }}
           >
             Al NutriScan
           </span>
@@ -82,7 +93,7 @@ export default function Header({ user, onLogout, onNavigate, currentPage }) {
         </nav>
 
         {/* ACTION BUTTONS */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           {/* Notification Bell */}
           <button className="text-slate-500 hover:text-[#059669] p-2 rounded-full hover:bg-slate-50 transition-colors focus:outline-none relative">
             <Bell className="w-5 h-5 stroke-[1.8]" />
@@ -111,6 +122,7 @@ export default function Header({ user, onLogout, onNavigate, currentPage }) {
                   <button
                     onClick={() => {
                       setDropdownOpen(false);
+                      setMobileMenuOpen(false);
                       handleNav("profile");
                     }}
                     className="w-full text-left px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-[#059669] transition-colors flex items-center gap-2 font-semibold"
@@ -121,6 +133,7 @@ export default function Header({ user, onLogout, onNavigate, currentPage }) {
                   <button
                     onClick={() => {
                       setDropdownOpen(false);
+                      setMobileMenuOpen(false);
                       onLogout();
                     }}
                     className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2 font-semibold border-t border-slate-50"
@@ -134,6 +147,67 @@ export default function Header({ user, onLogout, onNavigate, currentPage }) {
           </div>
         </div>
       </div>
+
+      {/* MOBILE MENU */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-slate-100 bg-white px-6 py-4 flex flex-col gap-2 shadow-inner">
+          <button
+            onClick={() => {
+              handleNav("home");
+              setMobileMenuOpen(false);
+            }}
+            className={`font-semibold text-sm py-2.5 text-left border-b border-slate-50 hover:text-[#059669] ${
+              currentPage === "home" ? "text-[#059669]" : "text-slate-500"
+            }`}
+          >
+            Trang chủ
+          </button>
+          <button
+            onClick={() => {
+              handleNav("scan");
+              setMobileMenuOpen(false);
+            }}
+            className={`font-semibold text-sm py-2.5 text-left border-b border-slate-50 hover:text-[#059669] ${
+              currentPage === "scan" ? "text-[#059669]" : "text-slate-500"
+            }`}
+          >
+            Quét thực phẩm
+          </button>
+          <button
+            onClick={() => {
+              handleNav("meal-planner");
+              setMobileMenuOpen(false);
+            }}
+            className={`font-semibold text-sm py-2.5 text-left border-b border-slate-50 hover:text-[#059669] ${
+              currentPage === "meal-planner" ? "text-[#059669]" : "text-slate-500"
+            }`}
+          >
+            Thực đơn AI
+          </button>
+          <button
+            onClick={() => {
+              handleNav("health-log");
+              setMobileMenuOpen(false);
+            }}
+            className={`font-semibold text-sm py-2.5 text-left border-b border-slate-50 hover:text-[#059669] ${
+              currentPage === "health-log" ? "text-[#059669]" : "text-slate-500"
+            }`}
+          >
+            Nhật ký sức khỏe
+          </button>
+          <button
+            onClick={() => {
+              handleNav("history");
+              setMobileMenuOpen(false);
+            }}
+            className={`font-semibold text-sm py-2.5 text-left hover:text-[#059669] ${
+              currentPage === "history" ? "text-[#059669]" : "text-slate-500"
+            }`}
+          >
+            Lịch sử
+          </button>
+        </div>
+      )}
     </header>
   );
 }

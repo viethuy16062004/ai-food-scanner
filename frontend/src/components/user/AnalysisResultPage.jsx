@@ -192,6 +192,14 @@ export default function AnalysisResultPage({ scanResult, onBack }) {
         </div>
       </div>
 
+      {/* WARNING BANNER FOR PERSISTENCE FAILURE */}
+      {scanResult.savedToHistory === false && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 flex items-center justify-center gap-2 text-amber-800 text-xs font-semibold">
+          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+          <span>Không thể lưu kết quả quét vào lịch sử. Vui lòng đăng nhập lại.</span>
+        </div>
+      )}
+
       {/* MAIN CONTENT */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -327,16 +335,16 @@ export default function AnalysisResultPage({ scanResult, onBack }) {
 
             {/* Macro Distribution Card */}
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-              <h3 className="font-bold text-gray-800 text-base mb-4">Phân bổ đại dưỡng chất</h3>
+              <h3 className="font-bold text-gray-800 text-base mb-4 text-center sm:text-left">Phân bổ đại dưỡng chất</h3>
 
-              <div className="flex items-center gap-6">
+              <div className="flex flex-col sm:flex-row items-center gap-6">
                 {/* Donut */}
-                <div className="shrink-0">
+                <div className="shrink-0 flex justify-center w-full sm:w-auto">
                   <DonutChart protein={protein} carbs={carbs} fat={fat} />
                 </div>
 
                 {/* Legend */}
-                <div className="flex flex-col gap-4 flex-1">
+                <div className="flex flex-col gap-4 w-full flex-1">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="w-3 h-3 rounded-full bg-teal-600"></span>
@@ -432,12 +440,12 @@ export default function AnalysisResultPage({ scanResult, onBack }) {
         </div>
 
         {/* ========== BOTTOM ACTION BUTTONS ========== */}
-        <div className="flex items-center justify-center gap-4 mt-8 mb-4">
-          <button className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 px-8 rounded-2xl shadow-md hover:shadow-lg transition-all text-sm">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-4 mt-8 mb-4 px-4 sm:px-0">
+          <button className="flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 px-6 sm:px-8 rounded-2xl shadow-md hover:shadow-lg transition-all text-sm min-h-[44px]">
             <BookmarkCheck className="w-5 h-5" />
             Lưu vào nhật ký ăn uống
           </button>
-          <button className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-bold py-3.5 px-8 rounded-2xl border border-gray-300 hover:border-gray-400 shadow-sm transition-all text-sm">
+          <button className="flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-bold py-3.5 px-6 sm:px-8 rounded-2xl border border-gray-300 hover:border-gray-400 shadow-sm transition-all text-sm min-h-[44px]">
             <Share2 className="w-5 h-5" />
             Chia sẻ kết quả
           </button>

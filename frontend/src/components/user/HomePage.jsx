@@ -1,56 +1,115 @@
 import React, { useEffect, useState } from "react";
 import { api } from "../../services/api";
-import { Droplet, ChevronRight, Camera } from "lucide-react";
+import { Droplet, ChevronRight, Camera, Activity, Scale, Flame } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function HomePage({ user, onStartScan, onSelectScan }) {
   const [analytics, setAnalytics] = useState(null);
   const [recentScans, setRecentScans] = useState([]);
+  const [latestLog, setLatestLog] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await api.getDailyAnalytics();
-        setAnalytics(data);
-        const scans = await api.getRecentScans(4);
-        setRecentScans(scans || []);
-      } catch (err) {
-        console.error("Failed to load home data:", err);
-      } finally {
-        setLoading(false);
+  // Water & Metrics Modal states
+  const [waterIntake, setWaterIntake] = useState(0);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [inputWeight, setInputWeight] = useState("");
+  const [inputFat, setInputFat] = useState("");
+  const [inputWater, setInputWater] = useState("");
+  const [inputActive, setInputActive] = useState("");
+
+  const fetchData = async () => {
+    try {
+      const data = await api.getDailyAnalytics();
+      setAnalytics(data);
+      const scans = await api.getRecentScans(4);
+      setRecentScans(scans || []);
+      
+      const log = await api.getLatestHealthLog();
+      setLatestLog(log);
+      if (log) {
+        setWaterIntake(log.waterIntakeMl || 0);
+        setInputWeight(log.weight ? log.weight.toString() : "");
+        setInputFat(log.bodyFatPercent ? log.bodyFatPercent.toString() : "");
+        setInputWater(log.waterIntakeMl ? log.waterIntakeMl.toString() : "");
+        setInputActive(log.activeMinutes ? log.activeMinutes.toString() : "");
       }
-    };
+    } catch (err) {
+      console.error("Failed to load home data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
+
+  const handleAddWater = async () => {
+    try {
+      const nextIntake = waterIntake + 250;
+      setWaterIntake(nextIntake);
+      const updated = await api.saveTodayHealthLog({
+        waterIntakeMl: nextIntake
+      });
+      setLatestLog(updated);
+    } catch (err) {
+      console.error("Failed to save water intake:", err);
+    }
+  };
+
+  const handleOpenModal = () => {
+    if (latestLog) {
+      setInputWeight(latestLog.weight ? latestLog.weight.toString() : "");
+      setInputFat(latestLog.bodyFatPercent ? latestLog.bodyFatPercent.toString() : "");
+      setInputWater(latestLog.waterIntakeMl ? latestLog.waterIntakeMl.toString() : "");
+      setInputActive(latestLog.activeMinutes ? latestLog.activeMinutes.toString() : "");
+    }
+    setModalOpen(true);
+  };
+
+  const handleSaveMetrics = async (e) => {
+    e.preventDefault();
+    try {
+      const weight = parseFloat(inputWeight) || null;
+      const fat = parseFloat(inputFat) || null;
+      const water = parseFloat(inputWater) || 0;
+      const active = parseFloat(inputActive) || 0;
+      
+      // Calculate dynamic BMI using height from localStorage
+      const savedHeight = parseFloat(localStorage.getItem(`height_${user?.username}`)) || 177;
+      const heightM = savedHeight / 100;
+      const calculatedBmi = weight ? Math.round((weight / (heightM * heightM)) * 10) / 10 : null;
+
+      const updated = await api.saveTodayHealthLog({
+        weight,
+        bodyFatPercent: fat,
+        waterIntakeMl: water,
+        activeMinutes: active,
+        bmi: calculatedBmi
+      });
+      
+      setLatestLog(updated);
+      setWaterIntake(water);
+      setModalOpen(false);
+      fetchData(); // Reload all stats and progress
+    } catch (err) {
+      console.error("Failed to save health metrics:", err);
+    }
+  };
+
+  const getBmiClass = (bmi) => {
+    if (bmi < 18.5) return { label: "Gầy", color: "bg-amber-50 text-amber-700 border-amber-100" };
+    if (bmi < 24.9) return { label: "Bình thường", color: "bg-emerald-50 text-emerald-700 border-emerald-100" };
+    if (bmi < 29.9) return { label: "Thừa cân", color: "bg-orange-50 text-orange-700 border-orange-100" };
+    return { label: "Béo phì", color: "bg-red-50 text-red-700 border-red-100" };
+  };
 
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "buổi sáng";
     if (hour < 18) return "buổi chiều";
     return "buổi tối";
-  };
-
-  const getTodayDateString = () => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  };
-
-  // Water Intake Tracking (Persisted in localStorage, defaults to 1500ml as in mockup)
-  const [waterIntake, setWaterIntake] = useState(() => {
-    const username = user?.username || "default";
-    const dateKey = getTodayDateString();
-    const stored = localStorage.getItem(`water_intake_${username}_${dateKey}`);
-    return stored ? parseInt(stored, 10) : 1500;
-  });
-
-  const handleAddWater = () => {
-    const nextIntake = waterIntake >= 3000 ? 0 : waterIntake + 250; // loop back to 0 if they hit max to allow testing
-    setWaterIntake(nextIntake);
-    const username = user?.username || "default";
-    const dateKey = getTodayDateString();
-    localStorage.setItem(`water_intake_${username}_${dateKey}`, nextIntake.toString());
   };
 
   const userName = user?.fullName
@@ -133,7 +192,7 @@ export default function HomePage({ user, onStartScan, onSelectScan }) {
 
   return (
     <div className="w-full py-8">
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* GREETING SECTION */}
         <div className="mb-8">
           <h1 className="text-3xl font-extrabold text-[#047857] mb-2 tracking-tight">
@@ -146,13 +205,13 @@ export default function HomePage({ user, onStartScan, onSelectScan }) {
 
         {/* STATS CARDS */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
-          
+
           {/* NĂNG LƯỢNG CARD */}
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100/50 flex flex-col justify-between min-h-[350px]">
             <h3 className="text-base font-bold text-slate-800">
               Năng lượng
             </h3>
-            
+
             <div className="flex-1 flex flex-col items-center justify-center py-4">
               <div className="relative w-40 h-40 flex items-center justify-center">
                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 160 160">
@@ -206,7 +265,7 @@ export default function HomePage({ user, onStartScan, onSelectScan }) {
             <h3 className="text-base font-bold text-slate-800 mb-4">
               Dinh dưỡng đa lượng
             </h3>
-            
+
             <div className="space-y-4 flex-1 flex flex-col justify-center">
               {/* Carbs */}
               <div>
@@ -292,16 +351,14 @@ export default function HomePage({ user, onStartScan, onSelectScan }) {
                   return (
                     <div
                       key={i}
-                      className={`w-11 h-11 rounded-full flex items-center justify-center border transition-all duration-300 ${
-                        isFilled
+                      className={`w-11 h-11 rounded-full flex items-center justify-center border transition-all duration-300 ${isFilled
                           ? "bg-emerald-50 border-emerald-100"
                           : "bg-slate-50 border-slate-200/80"
-                      }`}
+                        }`}
                     >
                       <Droplet
-                        className={`w-5 h-5 transition-colors duration-300 ${
-                          isFilled ? "text-[#059669] fill-[#059669]" : "text-slate-300"
-                        }`}
+                        className={`w-5 h-5 transition-colors duration-300 ${isFilled ? "text-[#059669] fill-[#059669]" : "text-slate-300"
+                          }`}
                       />
                     </div>
                   );
@@ -314,16 +371,14 @@ export default function HomePage({ user, onStartScan, onSelectScan }) {
                   return (
                     <div
                       key={i}
-                      className={`w-11 h-11 rounded-full flex items-center justify-center border transition-all duration-300 ${
-                        isFilled
+                      className={`w-11 h-11 rounded-full flex items-center justify-center border transition-all duration-300 ${isFilled
                           ? "bg-emerald-50 border-emerald-100"
                           : "bg-slate-50 border-slate-200/80"
-                      }`}
+                        }`}
                     >
                       <Droplet
-                        className={`w-5 h-5 transition-colors duration-300 ${
-                          isFilled ? "text-[#059669] fill-[#059669]" : "text-slate-300"
-                        }`}
+                        className={`w-5 h-5 transition-colors duration-300 ${isFilled ? "text-[#059669] fill-[#059669]" : "text-slate-300"
+                          }`}
                       />
                     </div>
                   );
@@ -413,7 +468,7 @@ export default function HomePage({ user, onStartScan, onSelectScan }) {
       {/* FLOATING CAMERA BUTTON */}
       <button
         onClick={() => onStartScan && onStartScan()}
-        className="fixed bottom-8 right-8 w-14 h-14 bg-[#047857] hover:bg-[#065f46] text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-40 focus:outline-none"
+        className="fixed bottom-8 right-4 sm:right-8 w-14 h-14 bg-[#047857] hover:bg-[#065f46] text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-40 focus:outline-none"
         title="Quét thực phẩm"
       >
         <Camera className="w-6 h-6 stroke-[1.8]" />

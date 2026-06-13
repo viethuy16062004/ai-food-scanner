@@ -71,16 +71,20 @@ public class HealthLogService {
     }
 
     @Transactional
-    public HealthLog saveTodayLog(User user, Double weight, Double fatPercent, Double waterMl, Double activeMins) {
+    public HealthLog saveTodayLog(User user, Double weight, Double fatPercent, Double waterMl, Double activeMins, Double bmi) {
         LocalDate today = LocalDate.now();
         HealthLog log = healthLogRepository.findByUserAndLogDate(user, today)
                 .orElseGet(() -> HealthLog.builder().user(user).logDate(today).build());
 
         if (weight != null) {
             log.setWeight(weight);
-            // BMI = weight / (height^2). Let's assume height 1.77m (height is not set, so BMI = weight / 3.13)
-            double height = 1.77;
-            log.setBmi(Math.round((weight / (height * height)) * 10.0) / 10.0);
+            if (bmi != null) {
+                log.setBmi(bmi);
+            } else {
+                // BMI = weight / (height^2). Let's assume height 1.77m (height is not set, so BMI = weight / 3.13)
+                double height = 1.77;
+                log.setBmi(Math.round((weight / (height * height)) * 10.0) / 10.0);
+            }
         }
         if (fatPercent != null) {
             log.setBodyFatPercent(fatPercent);

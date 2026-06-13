@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import UserManagement from "./UserManagement";
 import AdminDashboard from "./AdminDashboard";
@@ -6,12 +6,13 @@ import ScanHistory from "./ScanHistory";
 import FoodLibrary from "./FoodLibrary";
 import SystemSettings from "./SystemSettings";
 import {
-  LayoutDashboard, Users, BookOpen, BarChart3, Settings, LogOut, Leaf, Search, Bell, UserCircle, ClipboardList
+  LayoutDashboard, Users, BookOpen, BarChart3, Settings, LogOut, Leaf, Search, Bell, UserCircle, ClipboardList, Menu, X
 } from "lucide-react";
 
 export default function AdminApp({ user, onLogout }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const getActiveTab = () => {
     const path = location.pathname;
@@ -44,18 +45,38 @@ export default function AdminApp({ user, onLogout }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex font-sans w-full">
+    <div className="min-h-screen bg-gray-50 flex font-sans w-full min-w-0">
+      {/* ========== SIDEBAR OVERLAY FOR MOBILE ========== */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 lg:hidden transition-opacity duration-300"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* ========== LEFT SIDEBAR ========== */}
-      <aside className="w-64 bg-[#065f46] text-white flex flex-col fixed top-0 left-0 h-screen z-50">
-        {/* Logo */}
-        <div className="px-6 py-6 flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-            <Leaf className="w-5 h-5 text-emerald-200" />
+      <aside
+        className={`w-64 bg-[#065f46] text-white flex flex-col fixed top-0 left-0 h-screen z-50 transition-transform duration-300 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        }`}
+      >
+        {/* Logo and close button */}
+        <div className="px-6 py-6 flex items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+              <Leaf className="w-5 h-5 text-emerald-200" />
+            </div>
+            <div>
+              <div className="font-extrabold text-sm tracking-tight">AI NutriScan</div>
+              <div className="text-[10px] text-emerald-300/80 font-medium">Hệ thống quản trị</div>
+            </div>
           </div>
-          <div>
-            <div className="font-extrabold text-sm tracking-tight">AI NutriScan</div>
-            <div className="text-[10px] text-emerald-300/80 font-medium">Hệ thống quản trị</div>
-          </div>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden p-1.5 rounded-lg hover:bg-white/10 text-emerald-100"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Navigation */}
@@ -66,7 +87,10 @@ export default function AdminApp({ user, onLogout }) {
             return (
               <button
                 key={item.id}
-                onClick={() => navigate(item.path)}
+                onClick={() => {
+                  navigate(item.path);
+                  setSidebarOpen(false);
+                }}
                 className={`flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${
                   isActive
                     ? "bg-white text-[#065f46] font-semibold shadow-sm"
@@ -102,21 +126,30 @@ export default function AdminApp({ user, onLogout }) {
       </aside>
 
       {/* ========== MAIN CONTENT ========== */}
-      <main className="flex-1 ml-64 min-h-screen flex flex-col w-full">
+      <main className="flex-1 lg:ml-64 min-h-screen flex flex-col w-full min-w-0">
         {/* Top Header */}
-        <header className="h-16 bg-white border-b border-gray-200 px-8 flex items-center justify-between sticky top-0 z-40">
-          <div className="flex items-center text-gray-800">
+        <header className="h-16 bg-white border-b border-gray-200 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-40">
+          <div className="flex items-center text-gray-800 gap-3">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="p-2 -ml-2 rounded-lg text-gray-500 hover:bg-gray-100 lg:hidden"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
             {activeTab !== "dashboard" && (
-              <>
+              <div className="hidden sm:flex items-center">
                 <span className="text-emerald-700 font-semibold mr-2">AI NutriScan</span>
                 <span className="text-gray-400 mx-2">/</span>
                 <span className="font-bold">{getPageTitle()}</span>
-              </>
+              </div>
+            )}
+            {activeTab === "dashboard" && (
+              <span className="font-bold text-gray-900 block lg:hidden">Trang tổng quan</span>
             )}
           </div>
           
-          <div className="flex items-center gap-4">
-            <div className="relative">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="relative hidden md:block">
               <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input 
                 type="text" 
@@ -149,12 +182,12 @@ export default function AdminApp({ user, onLogout }) {
           
           {/* Admin Unified Footer */}
           <footer className="w-full bg-white border-t border-gray-200 mt-auto">
-            <div className="px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div>
+            <div className="px-4 sm:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-center sm:text-left">
                 <span className="font-bold text-emerald-800 text-sm block mb-1">AI NutriScan</span>
                 <p className="text-[11px] text-gray-500">© 2024 AI NutriScan. Built for Health.</p>
               </div>
-              <div className="flex items-center gap-6 text-[11px] text-gray-500">
+              <div className="flex items-center justify-center gap-4 sm:gap-6 text-[11px] text-gray-500 flex-wrap">
                 <a href="#" className="hover:text-gray-700 transition-colors">Chính sách bảo mật</a>
                 <a href="#" className="hover:text-gray-700 transition-colors">Điều khoản dịch vụ</a>
                 <a href="#" className="hover:text-gray-700 transition-colors">Trung tâm hỗ trợ</a>

@@ -9,6 +9,22 @@ const getAuthHeader = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
+// Global Axios Interceptor to catch 401/403 and automatically logout/redirect
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      console.warn("Session expired or unauthorized. Logging out...");
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const api = {
   // Authentication
   login: async (username, password) => {

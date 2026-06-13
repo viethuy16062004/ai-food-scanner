@@ -50,7 +50,7 @@ export default function AiCoachChat({ isOpen, onClose, user, currentPage }) {
 
   return (
     <div
-      className={`fixed right-8 z-50 w-[380px] max-w-[calc(100vw-2rem)] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[500px] border border-slate-100 animate-in fade-in slide-in-from-bottom-5 duration-200 ${
+      className={`fixed right-4 sm:right-8 z-50 w-[380px] max-w-[calc(100vw-2rem)] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[500px] max-h-[70vh] sm:max-h-[500px] border border-slate-100 animate-in fade-in slide-in-from-bottom-5 duration-200 ${
         currentPage === "home" ? "bottom-24" : "bottom-6"
       }`}
     >

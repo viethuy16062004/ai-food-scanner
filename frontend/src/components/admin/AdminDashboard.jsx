@@ -48,14 +48,14 @@ export default function AdminDashboard({ user }) {
     <div className="min-h-screen bg-gray-50">
       {/* ========== HERO SECTION ========== */}
       <section className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-8 py-12">
+        <div className="max-w-6xl mx-auto px-4 sm:px-8 py-8 sm:py-12">
           {/* Version badge */}
           <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 text-xs font-bold px-3 py-1.5 rounded-full border border-emerald-200 mb-5">
             <Sparkles className="w-3.5 h-3.5" />
             Phiên bản 4.0 Stable
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight mb-2">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight mb-2">
             Hệ thống Quản trị
             <br />
             <span className="bg-gradient-to-r from-[#065f46] to-[#059669] bg-clip-text text-transparent">
@@ -63,25 +63,25 @@ export default function AdminDashboard({ user }) {
             </span>
           </h1>
 
-          <p className="text-gray-500 text-sm md:text-base max-w-2xl mt-4 leading-relaxed">
+          <p className="text-gray-500 text-xs sm:text-sm md:text-base max-w-2xl mt-4 leading-relaxed">
             Kiểm soát toàn bộ dữ liệu, tinh chỉnh mô hình học máy và tối ưu hoá trải nghiệm người dùng 
             với các công cụ phân tích thời gian thực mạnh mẽ nhất.
           </p>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-3 mt-8">
-            <button className="flex items-center gap-2 bg-[#065f46] hover:bg-[#064e3b] text-white font-bold py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all text-sm">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-8">
+            <button className="flex items-center justify-center gap-2 bg-[#065f46] hover:bg-[#064e3b] text-white font-bold py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all text-sm min-h-[44px]">
               <Zap className="w-4 h-4" />
               Bắt đầu quản lý ngay
             </button>
-            <button className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3 px-6 rounded-xl border border-gray-300 hover:border-gray-400 shadow-sm transition-all text-sm">
+            <button className="flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3 px-6 rounded-xl border border-gray-300 hover:border-gray-400 shadow-sm transition-all text-sm min-h-[44px]">
               <FileText className="w-4 h-4" />
               Tài liệu hướng dẫn
             </button>
           </div>
 
           {/* ========== STATS CARDS ========== */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-10">
             <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
               <p className="text-xs text-gray-500 font-medium mb-1">Tổng lượng quét</p>
               <p className="text-3xl font-extrabold text-gray-900">
@@ -125,8 +125,8 @@ export default function AdminDashboard({ user }) {
       </section>
 
       {/* ========== FEATURES SECTION ========== */}
-      <section className="max-w-6xl mx-auto px-8 py-16">
-        <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 text-center mb-12">
+      <section className="max-w-6xl mx-auto px-4 sm:px-8 py-12 sm:py-16">
+        <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 text-center mb-10">
           Tính năng Quản trị <span className="bg-gradient-to-r from-[#065f46] to-[#059669] bg-clip-text text-transparent">Độc quyền</span>
         </h2>
 
@@ -205,11 +205,11 @@ export default function AdminDashboard({ user }) {
 
       {/* ========== TRUSTED BY SECTION ========== */}
       <section className="border-t border-gray-200 bg-white">
-        <div className="max-w-6xl mx-auto px-8 py-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-8 py-8 sm:py-10">
           <p className="text-center text-xs text-gray-400 uppercase tracking-widest font-semibold mb-6">
             Được tin dùng bởi các tổ chức hàng đầu
           </p>
-          <div className="flex items-center justify-center gap-10 md:gap-16 flex-wrap">
+          <div className="flex items-center justify-center gap-6 sm:gap-10 md:gap-16 flex-wrap">
             <div className="flex items-center gap-2 text-gray-400">
               <Heart className="w-5 h-5" />
               <span className="font-semibold text-sm">HealthOrg</span>
@@ -231,15 +231,15 @@ export default function AdminDashboard({ user }) {
       </section>
 
       {/* ========== CTA BANNER ========== */}
-      <section className="max-w-6xl mx-auto px-8 py-12">
-        <div className="bg-gradient-to-r from-[#065f46] to-[#059669] rounded-3xl p-10 md:p-14 text-center text-white">
-          <h2 className="text-2xl md:text-3xl font-extrabold mb-3">
+      <section className="max-w-6xl mx-auto px-4 sm:px-8 py-8 sm:py-12">
+        <div className="bg-gradient-to-r from-[#065f46] to-[#059669] rounded-2xl sm:rounded-3xl p-6 sm:p-10 md:p-14 text-center text-white">
+          <h2 className="text-2xl md:text-3xl font-extrabold mb-3 leading-snug">
             Nâng tầm quản trị sức khỏe cộng đồng
           </h2>
-          <p className="text-emerald-200 text-sm md:text-base max-w-lg mx-auto mb-8">
+          <p className="text-emerald-200 text-xs sm:text-sm md:text-base max-w-lg mx-auto mb-8">
             Sẵn sàng triển khai hệ thống AI thông minh nhất cho doanh nghiệp của bạn.
           </p>
-          <button className="bg-white hover:bg-gray-50 text-[#065f46] font-bold py-3.5 px-8 rounded-2xl shadow-lg hover:shadow-xl transition-all text-sm">
+          <button className="w-full sm:w-auto bg-white hover:bg-gray-50 text-[#065f46] font-bold py-3.5 px-8 rounded-2xl shadow-lg hover:shadow-xl transition-all text-sm min-h-[44px]">
             Liên hệ tư vấn ngay
           </button>
         </div>

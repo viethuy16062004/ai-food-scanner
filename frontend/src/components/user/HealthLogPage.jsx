@@ -12,9 +12,11 @@ export default function HealthLogPage({ user }) {
   // Metric update modal
   const [modalOpen, setModalOpen] = useState(false);
   const [inputWeight, setInputWeight] = useState("");
+  const [inputHeight, setInputHeight] = useState("");
   const [inputFat, setInputFat] = useState("");
   const [inputWater, setInputWater] = useState("");
   const [inputActive, setInputActive] = useState("");
+  const [modalError, setModalError] = useState("");
 
   const fetchData = async () => {
     try {
@@ -36,23 +38,52 @@ export default function HealthLogPage({ user }) {
   }, []);
 
   const handleOpenModal = () => {
+    setModalError("");
     if (latestLog) {
       setInputWeight(latestLog.weight || "");
       setInputFat(latestLog.bodyFatPercent || "");
       setInputWater(latestLog.waterIntakeMl || "");
       setInputActive(latestLog.activeMinutes || "");
     }
+    const savedHeight = localStorage.getItem(`height_${user?.username}`) || "170";
+    setInputHeight(savedHeight);
     setModalOpen(true);
   };
 
   const handleSaveMetrics = async (e) => {
     e.preventDefault();
+    setModalError("");
     try {
+      const weight = inputWeight ? parseFloat(inputWeight) : null;
+      const heightCm = inputHeight ? parseFloat(inputHeight) : null;
+      const fat = inputFat ? parseFloat(inputFat) : null;
+      const water = inputWater ? parseFloat(inputWater) : null;
+      const active = inputActive ? parseFloat(inputActive) : null;
+
+      if (weight && (isNaN(weight) || weight < 30 || weight > 300)) {
+        throw new Error("Cân nặng phải nằm trong khoảng từ 30kg đến 300kg.");
+      }
+      if (heightCm && (isNaN(heightCm) || heightCm < 100 || heightCm > 250)) {
+        throw new Error("Chiều cao phải nằm trong khoảng từ 100cm đến 250cm.");
+      }
+      if (fat && (isNaN(fat) || fat < 1 || fat > 60)) {
+        throw new Error("Tỷ lệ mỡ cơ thể phải nằm trong khoảng từ 1% đến 60%.");
+      }
+
+      if (heightCm) {
+        localStorage.setItem(`height_${user?.username}`, heightCm.toString());
+      }
+
+      // Calculate dynamic BMI
+      const heightM = heightCm ? heightCm / 100 : 1.77;
+      const calculatedBmi = weight ? Math.round((weight / (heightM * heightM)) * 10) / 10 : null;
+
       const data = {
-        weight: inputWeight ? parseFloat(inputWeight) : null,
-        bodyFatPercent: inputFat ? parseFloat(inputFat) : null,
-        waterIntakeMl: inputWater ? parseFloat(inputWater) : null,
-        activeMinutes: inputActive ? parseFloat(inputActive) : null
+        weight: weight,
+        bodyFatPercent: fat,
+        waterIntakeMl: water,
+        activeMinutes: active,
+        bmi: calculatedBmi
       };
       const updated = await api.saveTodayHealthLog(data);
       setLatestLog(updated);
@@ -63,6 +94,7 @@ export default function HealthLogPage({ user }) {
       setModalOpen(false);
     } catch (err) {
       console.error("Failed to save health metrics:", err);
+      setModalError(err.message || "Không thể lưu chỉ số sức khỏe. Vui lòng thử lại.");
     }
   };
 
@@ -171,9 +203,8 @@ export default function HealthLogPage({ user }) {
   const currentWater = latestLog?.waterIntakeMl || 1800;
   const currentActive = latestLog?.activeMinutes || 30;
   const currentCalories = latestLog?.avgCalories || 1950;
-
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       {/* Header section with AI recommendation card */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
         <div>
@@ -399,15 +430,33 @@ export default function HealthLogPage({ user }) {
             </div>
             
             <form onSubmit={handleSaveMetrics} className="p-6 flex flex-col gap-4">
+              {modalError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 text-xs font-semibold p-4 rounded-2xl">
+                  ⚠️ {modalError}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">Chiều cao (cm)</label>
+                <input
+                  type="number"
+                  step="any"
+                  value={inputHeight}
+                  onChange={(e) => setInputHeight(e.target.value)}
+                  placeholder="Ví dụ: 170"
+                  className="w-full bg-slate-50 border border-slate-100 focus:border-emerald-300 outline-none text-xs font-semibold text-slate-800 px-4 py-3 rounded-2xl"
+                />
+              </div>
+
               <div>
                 <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">Cân nặng (kg)</label>
                 <input
                   type="number"
-                  step="0.1"
+                  step="any"
                   value={inputWeight}
                   onChange={(e) => setInputWeight(e.target.value)}
                   placeholder="Ví dụ: 68.5"
-                  className="w-full bg-slate-50 border border-slate-100 focus:border-emerald-300 outline-none text-xs font-semibold px-4 py-3 rounded-2xl"
+                  className="w-full bg-slate-50 border border-slate-100 focus:border-emerald-300 outline-none text-xs font-semibold text-slate-800 px-4 py-3 rounded-2xl"
                 />
               </div>
 
@@ -415,11 +464,11 @@ export default function HealthLogPage({ user }) {
                 <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-1.5">Tỷ lệ mỡ cơ thể (%)</label>
                 <input
                   type="number"
-                  step="0.1"
+                  step="any"
                   value={inputFat}
                   onChange={(e) => setInputFat(e.target.value)}
                   placeholder="Ví dụ: 18.4"
-                  className="w-full bg-slate-50 border border-slate-100 focus:border-emerald-300 outline-none text-xs font-semibold px-4 py-3 rounded-2xl"
+                  className="w-full bg-slate-50 border border-slate-100 focus:border-emerald-300 outline-none text-xs font-semibold text-slate-800 px-4 py-3 rounded-2xl"
                 />
               </div>
 
@@ -431,7 +480,7 @@ export default function HealthLogPage({ user }) {
                   value={inputWater}
                   onChange={(e) => setInputWater(e.target.value)}
                   placeholder="Ví dụ: 2000"
-                  className="w-full bg-slate-50 border border-slate-100 focus:border-emerald-300 outline-none text-xs font-semibold px-4 py-3 rounded-2xl"
+                  className="w-full bg-slate-50 border border-slate-100 focus:border-emerald-300 outline-none text-xs font-semibold text-slate-800 px-4 py-3 rounded-2xl"
                 />
               </div>
 
@@ -443,7 +492,7 @@ export default function HealthLogPage({ user }) {
                   value={inputActive}
                   onChange={(e) => setInputActive(e.target.value)}
                   placeholder="Ví dụ: 45"
-                  className="w-full bg-slate-50 border border-slate-100 focus:border-emerald-300 outline-none text-xs font-semibold px-4 py-3 rounded-2xl"
+                  className="w-full bg-slate-50 border border-slate-100 focus:border-emerald-300 outline-none text-xs font-semibold text-slate-800 px-4 py-3 rounded-2xl"
                 />
               </div>
 

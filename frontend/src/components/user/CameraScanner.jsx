@@ -147,15 +147,14 @@ export default function CameraScanner({ onScanSuccess }) {
           <span>{error}</span>
         </div>
       )}
-
       {/* Control Buttons */}
-      <div className="w-full max-w-md flex gap-4">
+      <div className="w-full max-w-md flex flex-col gap-3">
         {hasCamera && (
-          <>
+          <div className="flex gap-3 w-full">
             <button
               onClick={handleCapture}
               disabled={loading}
-              className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-[0.99] text-slate-950 font-extrabold py-4 px-6 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/20 transition-all text-sm disabled:opacity-50"
+              className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-[0.99] text-slate-950 font-extrabold py-4 px-6 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/20 transition-all text-sm disabled:opacity-50 min-h-[44px]"
             >
               <Camera className="w-5 h-5 stroke-[2.5]" />
               Quét Ngay
@@ -164,15 +163,15 @@ export default function CameraScanner({ onScanSuccess }) {
             <button
               onClick={toggleCamera}
               disabled={loading}
-              className="bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-slate-100 p-4 rounded-xl active:scale-[0.99] transition-all"
+              className="bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-slate-100 p-4 rounded-xl active:scale-[0.99] transition-all min-h-[44px] shrink-0"
               title="Đổi camera"
             >
               <RefreshCw className="w-5 h-5" />
             </button>
-          </>
+          </div>
         )}
 
-        <label className={`cursor-pointer bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-slate-100 font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all text-sm active:scale-[0.99] ${!hasCamera ? 'w-full' : ''}`}>
+        <label className="cursor-pointer bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-slate-100 font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all text-sm active:scale-[0.99] min-h-[44px] w-full">
           <Upload className="w-5 h-5" />
           <span>Tải Ảnh Lên</span>
           <input
