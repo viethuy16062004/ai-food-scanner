@@ -39,11 +39,9 @@ public class ScanHistory {
     @Column(name = "healthy_score", nullable = false)
     private Integer healthyScore;
 
-    @Lob
     @Column(name = "raw_json_result", columnDefinition = "TEXT")
     private String rawJsonResult;
 
-    @Lob
     @Column(name = "image_url", columnDefinition = "TEXT")
     private String imageUrl;
 
