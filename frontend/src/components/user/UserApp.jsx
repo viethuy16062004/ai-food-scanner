@@ -8,15 +8,17 @@ import ProfilePage from "./ProfilePage";
 import AnalysisResultPage from "./AnalysisResultPage";
 import MealPlannerPage from "./MealPlannerPage";
 import HealthLogPage from "./HealthLogPage";
+import NotificationsPage from "./NotificationsPage";
 import Header from "../../layouts/Header";
 import Footer from "../../layouts/Footer";
-import { MessageSquare, Activity } from "lucide-react";
+import { MessageSquare, Activity, X, AlertTriangle, CheckCircle, Info } from "lucide-react";
 import AiCoachChat from "../chat/AiCoachChat";
 
 export default function UserApp({ user, onLogout }) {
   const [activeScan, setActiveScan] = useState(null);
   const [refreshHistory, setRefreshHistory] = useState(0);
   const [chatOpen, setChatOpen] = useState(false);
+  const [toasts, setToasts] = useState([]);
 
   // Onboarding state
   const [needsOnboarding, setNeedsOnboarding] = useState(() => {
@@ -31,6 +33,14 @@ export default function UserApp({ user, onLogout }) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const addToast = (title, message, type = "INFO") => {
+    const id = Date.now() + Math.random().toString(36).substr(2, 9);
+    setToasts((prev) => [...prev, { id, title, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 5000);
+  };
+
   // Derive currentPage from the URL path for Header highlighting
   const getCurrentPage = () => {
     const path = location.pathname;
@@ -40,6 +50,7 @@ export default function UserApp({ user, onLogout }) {
     if (path.startsWith("/result")) return "result";
     if (path.startsWith("/meal-planner")) return "meal-planner";
     if (path.startsWith("/health-log")) return "health-log";
+    if (path.startsWith("/notifications")) return "notifications";
     return "home";
   };
 
@@ -55,6 +66,26 @@ export default function UserApp({ user, onLogout }) {
   const handleScanSuccess = (analysisResult) => {
     setActiveScan(analysisResult);
     setRefreshHistory((prev) => prev + 1);
+    
+    // Trigger toast
+    addToast(
+      "Ghi nhận thực phẩm thành công",
+      `Đã phân tích món ăn ${analysisResult.foodName} (+${Math.round(analysisResult.calories || 0)} kcal).`,
+      "SUCCESS"
+    );
+
+    // Check if daily limit exceeded and trigger warning toast
+    api.getDailyAnalytics().then(analytics => {
+      const todayTotal = (analytics?.todayCalories || 0) + (analysisResult.calories || 0);
+      if (todayTotal > 2000) {
+        addToast(
+          "Cảnh báo: Vượt hạn mức Calo",
+          `Tổng calo của bạn hôm nay đã đạt ${Math.round(todayTotal)} kcal, vượt mục tiêu 2000 kcal!`,
+          "WARNING"
+        );
+      }
+    }).catch(err => console.error("Failed to check daily analytics after scan:", err));
+
     navigate("/result");
   };
 
@@ -187,6 +218,7 @@ export default function UserApp({ user, onLogout }) {
           <Route path="/health-log" element={<HealthLogPage user={user} />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/result" element={<AnalysisResultPage scanResult={activeScan} onBack={() => navigate(-1)} />} />
           {/* Default redirect to home */}
           <Route path="*" element={<Navigate to="/home" replace />} />
@@ -209,6 +241,37 @@ export default function UserApp({ user, onLogout }) {
 
       {/* AI Coach Chat Modal */}
       <AiCoachChat isOpen={chatOpen} onClose={() => setChatOpen(false)} user={user} currentPage={getCurrentPage()} />
+
+      {/* GLOBAL TOAST POPUPS */}
+      <div className="fixed right-4 top-20 z-50 flex flex-col gap-3 max-w-sm w-full pointer-events-none px-4 sm:px-0">
+        {toasts.map((t) => (
+          <div
+            key={t.id}
+            className={`p-4 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-100 shadow-xl flex gap-3 pointer-events-auto transition-all duration-300 transform translate-x-0 ${
+              t.type === "WARNING" ? "border-l-4 border-l-red-500" :
+              t.type === "SUCCESS" ? "border-l-4 border-l-emerald-500" : "border-l-4 border-l-blue-500"
+            }`}
+          >
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+              t.type === "WARNING" ? "bg-red-50 text-red-500" :
+              t.type === "SUCCESS" ? "bg-emerald-50 text-emerald-500" : "bg-blue-50 text-blue-500"
+            }`}>
+              {t.type === "WARNING" ? <AlertTriangle className="w-4 h-4" /> :
+               t.type === "SUCCESS" ? <CheckCircle className="w-4 h-4" /> : <Info className="w-4 h-4" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-xs font-extrabold text-slate-800 leading-snug">{t.title}</h4>
+              <p className="text-[11px] text-slate-600 font-semibold mt-0.5 leading-relaxed">{t.message}</p>
+            </div>
+            <button
+              onClick={() => setToasts((prev) => prev.filter((item) => item.id !== t.id))}
+              className="text-slate-400 hover:text-slate-600 focus:outline-none shrink-0"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        ))}
+      </div>
 
       <Footer />
     </div>
