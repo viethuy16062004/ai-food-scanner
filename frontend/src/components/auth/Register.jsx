@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { api } from "../../services/api";
-import { Lock, User, Mail, ShieldAlert, CheckCircle, ArrowRight, Timer, TrendingUp } from "lucide-react";
+import { Lock, User, Mail, ShieldAlert, CheckCircle, ArrowRight, Timer, TrendingUp, Eye, EyeOff } from "lucide-react";
 import registerHero from "../../assets/register_hero.png";
 
 export default function Register({ onLoginToggle }) {
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
@@ -147,14 +148,23 @@ export default function Register({ onLoginToggle }) {
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                   Mật khẩu
                 </label>
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-50/50 border border-slate-200 focus:border-[#026645] focus:bg-white rounded-xl py-3 px-4 text-slate-800 placeholder-slate-400 focus:outline-none transition-all text-sm"
-                  placeholder="••••••••"
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-slate-50/50 border border-slate-200 focus:border-[#026645] focus:bg-white rounded-xl py-3 pl-4 pr-10 text-slate-800 placeholder-slate-400 focus:outline-none transition-all text-sm"
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <button
