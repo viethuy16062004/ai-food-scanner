@@ -5,6 +5,7 @@ import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
 import UserApp from "./components/user/UserApp";
 import AdminApp from "./components/admin/AdminApp";
+import LandingPage from "./components/user/LandingPage";
 
 export default function App() {
   // Initialize auth state synchronously from localStorage to prevent
@@ -38,6 +39,7 @@ export default function App() {
   if (!isAuthenticated) {
     return (
       <Routes>
+        <Route path="/" element={<LandingPage />} />
         <Route
           path="/login"
           element={
@@ -59,8 +61,8 @@ export default function App() {
             />
           }
         />
-        {/* Redirect any unknown path to login */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        {/* Redirect any unknown path to landing page */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
   }
