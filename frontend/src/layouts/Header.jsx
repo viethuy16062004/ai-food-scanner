@@ -1,17 +1,58 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, User, Bell, Menu, X } from "lucide-react";
+import { LogOut, User, Bell, Menu, X, Check, AlertTriangle, CheckCircle, Info } from "lucide-react";
+import { api } from "../services/api";
 
 export default function Header({ user, onLogout, onNavigate, currentPage }) {
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const handleNav = (page) => {
     if (onNavigate) {
       onNavigate(page);
     } else {
       navigate(`/${page === "home" ? "home" : page}`);
+    }
+  };
+
+  const loadNotifications = async () => {
+    if (!user) return;
+    try {
+      const list = await api.getNotifications();
+      setNotifications(list);
+      
+      const countData = await api.getUnreadNotificationsCount();
+      setUnreadCount(countData.count || 0);
+    } catch (err) {
+      console.error("Failed to load notifications in header:", err);
+    }
+  };
+
+  useEffect(() => {
+    loadNotifications();
+    const interval = setInterval(loadNotifications, 15000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  const handleMarkAllRead = async () => {
+    try {
+      await api.markAllNotificationsAsRead();
+      loadNotifications();
+    } catch (err) {
+      console.error("Failed to mark all notifications as read:", err);
+    }
+  };
+
+  const handleMarkRead = async (id) => {
+    try {
+      await api.markNotificationAsRead(id);
+      loadNotifications();
+    } catch (err) {
+      console.error("Failed to mark notification as read:", err);
     }
   };
 
@@ -94,11 +135,102 @@ export default function Header({ user, onLogout, onNavigate, currentPage }) {
 
         {/* ACTION BUTTONS */}
         <div className="flex items-center gap-2 sm:gap-4">
-          {/* Notification Bell */}
-          <button className="text-slate-500 hover:text-[#059669] p-2 rounded-full hover:bg-slate-50 transition-colors focus:outline-none relative">
-            <Bell className="w-5 h-5 stroke-[1.8]" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-500 rounded-full"></span>
-          </button>
+          {/* Notification Bell & Dropdown */}
+          <div className="relative">
+            <button 
+              onClick={() => setNotificationsOpen(!notificationsOpen)}
+              className="text-slate-500 hover:text-[#059669] p-2 rounded-full hover:bg-slate-50 transition-colors focus:outline-none relative"
+            >
+              <Bell className="w-5 h-5 stroke-[1.8]" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center border border-white">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {notificationsOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setNotificationsOpen(false)} />
+                <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-100 shadow-xl py-3 z-20 flex flex-col max-h-[480px]">
+                  {/* Dropdown Header */}
+                  <div className="px-4 pb-2 border-b border-slate-100 flex items-center justify-between">
+                    <h3 className="font-bold text-slate-800 text-sm">Thông báo</h3>
+                    {unreadCount > 0 && (
+                      <button 
+                        onClick={handleMarkAllRead}
+                        className="text-xs text-[#059669] hover:underline font-semibold flex items-center gap-1 focus:outline-none"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        Đọc tất cả
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Dropdown Body */}
+                  <div className="flex-1 overflow-y-auto max-h-[320px] py-1 divide-y divide-slate-50">
+                    {notifications.length === 0 ? (
+                      <div className="px-4 py-8 text-center text-slate-400 text-xs font-semibold">
+                        Không có thông báo nào
+                      </div>
+                    ) : (
+                      notifications.slice(0, 5).map((noti) => (
+                        <div 
+                          key={noti.id} 
+                          className={`p-3.5 hover:bg-slate-50 transition-colors cursor-pointer flex gap-3 relative ${!noti.read ? "bg-emerald-50/20" : ""}`}
+                          onClick={() => {
+                            if (!noti.read) handleMarkRead(noti.id);
+                            setNotificationsOpen(false);
+                            handleNav("notifications");
+                          }}
+                        >
+                          {/* Left Icon depending on type */}
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                            noti.type === "WARNING" ? "bg-red-50 text-red-500" :
+                            noti.type === "SUCCESS" ? "bg-emerald-50 text-emerald-500" : "bg-blue-50 text-blue-500"
+                          }`}>
+                            {noti.type === "WARNING" ? <AlertTriangle className="w-4 h-4" /> :
+                             noti.type === "SUCCESS" ? <CheckCircle className="w-4 h-4" /> : <Info className="w-4 h-4" />}
+                          </div>
+
+                          {/* Message Content */}
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-xs text-slate-800 leading-snug ${!noti.read ? "font-bold" : "font-medium"}`}>
+                              {noti.title}
+                            </p>
+                            <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-2 leading-relaxed">
+                              {noti.message}
+                            </p>
+                            <span className="text-[9px] text-slate-400 font-bold uppercase mt-1 block">
+                              {new Date(noti.createdAt).toLocaleTimeString("vi-VN", {hour: '2-digit', minute:'2-digit'})} - {new Date(noti.createdAt).toLocaleDateString("vi-VN")}
+                            </span>
+                          </div>
+
+                          {/* Read indicator */}
+                          {!noti.read && (
+                            <span className="absolute top-4 right-4 w-2 h-2 bg-emerald-500 rounded-full"></span>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Dropdown Footer */}
+                  <div className="px-4 pt-2 border-t border-slate-100">
+                    <button
+                      onClick={() => {
+                        setNotificationsOpen(false);
+                        handleNav("notifications");
+                      }}
+                      className="w-full text-center text-xs font-bold text-slate-600 hover:text-[#059669] hover:bg-slate-50 py-2.5 rounded-xl transition-all"
+                    >
+                      Xem tất cả thông báo
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
           
           {/* User Profile Avatar Dropdown */}
           <div className="relative">

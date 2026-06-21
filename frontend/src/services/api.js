@@ -241,5 +241,41 @@ export const api = {
       headers: getAuthHeader()
     });
     return res.data;
+  },
+
+  // Notification APIs
+  getNotifications: async () => {
+    const res = await axios.get(`${SPRINGBOOT_URL}/notifications`, {
+      headers: getAuthHeader()
+    });
+    return res.data;
+  },
+
+  getUnreadNotificationsCount: async () => {
+    const res = await axios.get(`${SPRINGBOOT_URL}/notifications/unread-count`, {
+      headers: getAuthHeader()
+    });
+    return res.data;
+  },
+
+  markNotificationAsRead: async (id) => {
+    const res = await axios.put(`${SPRINGBOOT_URL}/notifications/${id}/read`, {}, {
+      headers: getAuthHeader()
+    });
+    return res.data;
+  },
+
+  markAllNotificationsAsRead: async () => {
+    const res = await axios.put(`${SPRINGBOOT_URL}/notifications/read-all`, {}, {
+      headers: getAuthHeader()
+    });
+    return res.data;
+  },
+
+  deleteNotification: async (id) => {
+    const res = await axios.delete(`${SPRINGBOOT_URL}/notifications/${id}`, {
+      headers: getAuthHeader()
+    });
+    return res.data;
   }
 };

@@ -18,6 +18,7 @@ import java.util.List;
 public class ScanHistoryService {
 
     private final ScanHistoryRepository scanHistoryRepository;
+    private final NotificationService notificationService;
 
     public ScanHistory saveScan(ScanRequest request, User user) {
         ScanHistory scanHistory = ScanHistory.builder()
@@ -31,7 +32,43 @@ public class ScanHistoryService {
                 .rawJsonResult(request.getRawJsonResult())
                 .imageUrl(request.getImageUrl())
                 .build();
-        return scanHistoryRepository.save(scanHistory);
+        ScanHistory saved = scanHistoryRepository.save(scanHistory);
+
+        try {
+            // 1. Send success notification
+            String successMsg = String.format("Đã ghi nhận món ăn: %s (+%s kcal) vào lịch sử dinh dưỡng của bạn.", 
+                    request.getFoodName(), Math.round(request.getCalories()));
+            notificationService.createNotification(user, "Ghi nhận thực phẩm thành công", successMsg, "SUCCESS");
+
+            // 2. Calculate daily calorie total and generate warning if threshold is crossed
+            LocalDate today = LocalDate.now();
+            LocalDateTime todayStart = today.atStartOfDay();
+            List<ScanHistory> todayScans = scanHistoryRepository.findByUserAndCreatedAtAfterOrderByCreatedAtDesc(user, todayStart);
+            
+            double totalTodayCalories = 0;
+            for (ScanHistory scan : todayScans) {
+                totalTodayCalories += scan.getCalories() != null ? scan.getCalories() : 0.0;
+            }
+
+            double limit = 2000.0; // Daily calorie target
+            if (totalTodayCalories > limit) {
+                String warningMsg = String.format("Tổng lượng Calo đã nạp hôm nay là %s kcal, vượt quá hạn mức mục tiêu của bạn (%s kcal). Hãy lưu ý điều chỉnh chế độ ăn uống nhé!", 
+                        Math.round(totalTodayCalories), Math.round(limit));
+                
+                // Avoid spamming warning notifications on same day
+                boolean hasWarningToday = notificationService.getNotifications(user).stream()
+                        .filter(n -> n.getType().equals("WARNING") && n.getCreatedAt().isAfter(todayStart))
+                        .anyMatch(n -> n.getTitle().contains("vượt hạn mức") || n.getTitle().contains("Vượt hạn mức"));
+                
+                if (!hasWarningToday) {
+                    notificationService.createNotification(user, "Cảnh báo: Vượt hạn mức Calo", warningMsg, "WARNING");
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to trigger scan notifications: " + e.getMessage());
+        }
+
+        return saved;
     }
 
     public List<ScanHistory> getHistory(User user) {
