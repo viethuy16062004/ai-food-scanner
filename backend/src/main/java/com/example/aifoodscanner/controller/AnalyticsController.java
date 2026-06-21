@@ -19,6 +19,10 @@ public class AnalyticsController {
 
     @GetMapping("/daily")
     public ResponseEntity<?> getDailyAnalytics(@AuthenticationPrincipal User user) {
+        if (user == null) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "User not authenticated or session expired"));
+        }
         try {
             DailyAnalytics analytics = scanHistoryService.getDailyAnalytics(user);
             return ResponseEntity.ok(analytics);

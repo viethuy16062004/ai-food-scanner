@@ -53,11 +53,11 @@ public class ScanHistoryService {
 
         LocalDateTime todayStart = today.atStartOfDay();
         for (ScanHistory scan : recentScans) {
-            if (!scan.getCreatedAt().isBefore(todayStart)) {
-                todayCalories += scan.getCalories();
-                todayProtein += scan.getProtein();
-                todayCarbs += scan.getCarbs();
-                todayFat += scan.getFat();
+            if (scan.getCreatedAt() != null && !scan.getCreatedAt().isBefore(todayStart)) {
+                todayCalories += scan.getCalories() != null ? scan.getCalories() : 0.0;
+                todayProtein += scan.getProtein() != null ? scan.getProtein() : 0.0;
+                todayCarbs += scan.getCarbs() != null ? scan.getCarbs() : 0.0;
+                todayFat += scan.getFat() != null ? scan.getFat() : 0.0;
             }
         }
 
@@ -75,11 +75,11 @@ public class ScanHistoryService {
 
             for (ScanHistory scan : recentScans) {
                 LocalDateTime cat = scan.getCreatedAt();
-                if (!cat.isBefore(startOfDay) && !cat.isAfter(endOfDay)) {
-                    dayCalories += scan.getCalories();
-                    dayProtein += scan.getProtein();
-                    dayCarbs += scan.getCarbs();
-                    dayFat += scan.getFat();
+                if (cat != null && !cat.isBefore(startOfDay) && !cat.isAfter(endOfDay)) {
+                    dayCalories += scan.getCalories() != null ? scan.getCalories() : 0.0;
+                    dayProtein += scan.getProtein() != null ? scan.getProtein() : 0.0;
+                    dayCarbs += scan.getCarbs() != null ? scan.getCarbs() : 0.0;
+                    dayFat += scan.getFat() != null ? scan.getFat() : 0.0;
                 }
             }
 
