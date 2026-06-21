@@ -91,10 +91,10 @@ Hệ thống sẽ tự động build frontend, backend Node.js, backend Spring B
 Database tự động chèn sẵn 2 tài khoản để bạn có thể trải nghiệm lập tức mà không cần đăng ký:
 
 1.  **Tài khoản Người Dùng (Premium User)**:
-    *   **Email**: `user@nutriai.com`
-    *   **Mật khẩu**: `user123`
+    *   **Email**: `Huy@gmail.com`
+    *   **Mật khẩu**: `123456`
 2.  **Tài khoản Quản Trị Viên (System Admin)**:
-    *   **Email**: `admin@nutriai.com`
+    *   **Email**: `admin`
     *   **Mật khẩu**: `admin123` *(Giúp bạn truy cập Admin Dashboard xem phân tích biểu đồ).*
 
 ---
