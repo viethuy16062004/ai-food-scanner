@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+import PageTransition from "../common/PageTransition";
 import UserManagement from "./UserManagement";
 import AdminDashboard from "./AdminDashboard";
 import ScanHistory from "./ScanHistory";
@@ -170,12 +171,12 @@ export default function AdminApp({ user, onLogout }) {
         <div className="flex-1 w-full bg-gray-50 overflow-x-hidden flex flex-col">
           <div className="flex-1">
             <Routes>
-              <Route path="/dashboard" element={<AdminDashboard user={user} />} />
-              <Route path="/users" element={<UserManagement />} />
-              <Route path="/scans" element={<ScanHistory />} />
-              <Route path="/library" element={<FoodLibrary />} />
-              <Route path="/settings" element={<SystemSettings />} />
-              <Route path="/analytics" element={<ScanHistory />} />
+              <Route path="/dashboard" element={<PageTransition><AdminDashboard user={user} /></PageTransition>} />
+              <Route path="/users" element={<PageTransition><UserManagement /></PageTransition>} />
+              <Route path="/scans" element={<PageTransition><ScanHistory /></PageTransition>} />
+              <Route path="/library" element={<PageTransition><FoodLibrary /></PageTransition>} />
+              <Route path="/settings" element={<PageTransition><SystemSettings /></PageTransition>} />
+              <Route path="/analytics" element={<PageTransition><ScanHistory /></PageTransition>} />
               <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
             </Routes>
           </div>

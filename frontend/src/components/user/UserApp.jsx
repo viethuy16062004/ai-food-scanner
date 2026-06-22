@@ -13,6 +13,7 @@ import Header from "../../layouts/Header";
 import Footer from "../../layouts/Footer";
 import { MessageSquare, Activity, X, AlertTriangle, CheckCircle, Info } from "lucide-react";
 import AiCoachChat from "../chat/AiCoachChat";
+import PageTransition from "../common/PageTransition";
 
 export default function UserApp({ user, onLogout }) {
   const [activeScan, setActiveScan] = useState(null);
@@ -212,14 +213,14 @@ export default function UserApp({ user, onLogout }) {
 
       <main className="flex-1 w-full relative z-10">
         <Routes>
-          <Route path="/home" element={<HomePage user={user} onStartScan={handleStartScan} onSelectScan={handleSelectHistoryScan} />} />
-          <Route path="/scan" element={<ScanFoodPage onScanSuccess={handleScanSuccess} onBack={() => navigate(-1)} />} />
-          <Route path="/meal-planner" element={<MealPlannerPage user={user} onOpenChat={() => setChatOpen(true)} />} />
-          <Route path="/health-log" element={<HealthLogPage user={user} />} />
-          <Route path="/history" element={<HistoryPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/notifications" element={<NotificationsPage />} />
-          <Route path="/result" element={<AnalysisResultPage scanResult={activeScan} onBack={() => navigate(-1)} />} />
+          <Route path="/home" element={<PageTransition><HomePage user={user} onStartScan={handleStartScan} onSelectScan={handleSelectHistoryScan} /></PageTransition>} />
+          <Route path="/scan" element={<PageTransition><ScanFoodPage onScanSuccess={handleScanSuccess} onBack={() => navigate(-1)} /></PageTransition>} />
+          <Route path="/meal-planner" element={<PageTransition><MealPlannerPage user={user} onOpenChat={() => setChatOpen(true)} /></PageTransition>} />
+          <Route path="/health-log" element={<PageTransition><HealthLogPage user={user} /></PageTransition>} />
+          <Route path="/history" element={<PageTransition><HistoryPage /></PageTransition>} />
+          <Route path="/profile" element={<PageTransition><ProfilePage /></PageTransition>} />
+          <Route path="/notifications" element={<PageTransition><NotificationsPage /></PageTransition>} />
+          <Route path="/result" element={<PageTransition><AnalysisResultPage scanResult={activeScan} onBack={() => navigate(-1)} /></PageTransition>} />
           {/* Default redirect to home */}
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
