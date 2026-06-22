@@ -76,3 +76,45 @@ body {
   animation: qr-scan-anim 2.5s infinite linear;
 }
 
+/* Page Transition & Loading Effects */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-enter {
+  animation: page-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes progress-loading {
+  0% { width: 0%; }
+  50% { width: 70%; }
+  100% { width: 90%; }
+}
+
+.top-loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #10b981, #14b8a6);
+  z-index: 9999;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+.top-loading-bar.start {
+  animation: progress-loading 1.8s cubic-bezier(0.1, 0.8, 0.1, 1) forwards;
+}
+
+.top-loading-bar.finish {
+  width: 100% !important;
+  opacity: 0;
+  transition: width 0.25s ease, opacity 0.4s ease 0.2s;
+}
