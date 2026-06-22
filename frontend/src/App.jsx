@@ -37,6 +37,11 @@ export default function App() {
 
   // If not authenticated, only show auth routes
   if (!isAuthenticated) {
+    const path = location.pathname;
+    const isAuthRequiredPath = 
+      path.startsWith("/admin") || 
+      ["/home", "/scan", "/meal-planner", "/health-log", "/history", "/profile", "/notifications", "/result"].some(p => path.startsWith(p));
+
     return (
       <Routes>
         <Route path="/" element={<LandingPage />} />
@@ -61,8 +66,8 @@ export default function App() {
             />
           }
         />
-        {/* Redirect any unknown path to landing page */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Redirect authenticated routes back to login, others to landing page */}
+        <Route path="*" element={<Navigate to={isAuthRequiredPath ? "/login" : "/"} replace />} />
       </Routes>
     );
   }
